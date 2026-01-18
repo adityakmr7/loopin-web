@@ -1,0 +1,107 @@
+
+{
+  // --- Your Original Theme & UI Customizations ---
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#6c5ce7",
+ "activityBar.background": "#382B15",
+    "activityBar.foreground": "#ffffff",
+    "activityBar.inactiveForeground": "#ffffff99",
+    "activityBarBadge.background": "#fd79a8",
+    "activityBarBadge.foreground": "#ffffff",
+    "commandCenter.border": "#ffffff99",
+    "sash.hoverBorder": "#6c5ce7",
+    "statusBar.background": "#4834d4",
+    "statusBar.foreground": "#ffffff",
+    "statusBarItem.hoverBackground": "#686de0",
+    "statusBarItem.remoteBackground": "#4834d4",
+    "statusBarItem.remoteForeground": "#ffffff",
+    "titleBar.activeBackground": "#4F3D1E",
+    "titleBar.activeForeground": "#FCFBF8",
+    "titleBar.inactiveBackground": "#4834d499",
+    "titleBar.inactiveForeground": "#ffffff99"
+  },
+  "peacock.color": "#4834d4",
+  // --- VIM SPECIFIC SETTINGS ---
+  "vim.useSystemClipboard": true,      // Allows yanking (y) directly to your OS clipboard
+  "vim.hlsearch": true,               // Highlights search results
+  "vim.incsearch": true,              // Jumps to matches as you type
+  "vim.easymotion": true,             // Fast jumping (requires EasyMotion)
+  "vim.surround": true,               // Essential for React: change tags/quotes easily
+  "vim.leader": "<space>",            // Sets Space as your leader key
+  "vim.handleKeys": {
+    "<C-f>": false,                   // Let VS Code handle "Find" instead of Vim
+    "<C-c>": false,                   // Let VS Code handle "Copy" (so you don't lose it)
+    "<C-v>": false                    // Let VS Code handle "Paste"
+  },
+  "vim.insertModeKeyBindings": [
+    { "before": ["j", "j"], "after": ["<Esc>"] } // Type 'jj' to quickly exit Insert mode
+  ],
+  "vim.normalModeKeyBindingsNonRecursive": [
+    { "before": ["<leader>", "e"], "commands": ["workbench.view.explorer"] }, // Space+e opens Explorer
+    { "before": ["g", "d"], "commands": ["editor.action.revealDefinition"] }  // Go to Definition
+  ],
+  "editor.lineNumbers": "relative",    // VITAL for Vim: allows jumping like '10j' accurately
+
+  // --- Editor Core (Enhanced for Readability) ---
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.minimap.enabled": false,
+  "editor.cursorBlinking": "smooth",
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.smoothScrolling": true,
+  "editor.scrollBeyondLastLine": false,
+  "editor.renderWhitespace": "boundary",
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.stickyScroll.enabled": true,
+  "editor.linkedEditing": true, // Renames closing tag when opening tag is changed
+  "editor.fontSize": 18,
+
+  // --- React & JavaScript/TypeScript Intelligence ---
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  "javascript.suggest.autoImports": true,
+  "typescript.suggest.autoImports": true,
+  "javascript.suggest.completeFunctionCalls": true,
+  "typescript.suggest.completeFunctionCalls": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "editor.inlineSuggest.enabled": true,
+  "editor.suggestSelection": "first",
+  "editor.acceptSuggestionOnEnter": "smart",
+  "editor.parameterHints.enabled": true,
+
+  // --- React Native & JSX Enhancements ---
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact",
+    "typescript": "typescriptreact"
+  },
+  "files.associations": {
+    "*.js": "javascriptreact",
+    "*.ts": "typescriptreact"
+  },
+
+  // --- Search & Performance Optimization ---
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/android": true,
+    "**/ios": true,
+    "**/.expo": true,
+    "**/dist": true,
+    "**/build": true
+  },
+
+  // --- Version Control & Tooling ---
+  "git.enableSmartCommit": true,
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "eslint.alwaysShowStatus": true,
+  "prettier.requireConfig": true,
+  "scm.diffDecorations": "all"
+}

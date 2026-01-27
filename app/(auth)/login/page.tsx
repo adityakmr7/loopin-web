@@ -33,19 +33,22 @@ export default function LoginPage() {
   const onSubmit = async (data: FieldValues) => {
     setLoading(true);
     try {
-      const response = await api.post("/auth/login", data);
-      const { tokens } = response.data.data;
-      
-      localStorage.setItem("accessToken", tokens.accessToken);
-      localStorage.setItem("refreshToken", tokens.refreshToken);
+      await api.post("/auth/login", data);
       toast.success("Welcome back!", {
         description: "Redirecting to dashboard...",
       });
-      // Force reload to update auth state
-      window.location.assign("/dashboard");
-    } catch (error: any) {
+      // Navigate to dashboard
+      router.push("/dashboard");
+    } catch (error: unknown) {
+      const errorMessage = 
+        error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'error' in error.response.data
+          ? String(error.response.data.error)
+          : "Please check your credentials";
+      
       toast.error("Login failed", {
-        description: error.response?.data?.error || "Please check your credentials",
+        description: errorMessage,
       });
       setLoading(false);
     }

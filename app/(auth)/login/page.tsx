@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useForm, FieldValues } from "react-hook-form";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -22,23 +21,38 @@ import api from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
   
   // Redirect if already logged in
   useAuth(true);
 
   const { register, handleSubmit } = useForm();
 
+  // Handle redirect after successful login
+  useEffect(() => {
+    if (shouldRedirect) {
+      window.location.href = "/dashboard";
+    }
+  }, [shouldRedirect]);
+
   const onSubmit = async (data: FieldValues) => {
     setLoading(true);
     try {
-      await api.post("/auth/login", data);
+      const response = await api.post("/auth/login", data);
+      
+      // Save the access token to localStorage
+      // API response structure: response.data.data.tokens.accessToken
+      if (response.data?.data?.tokens?.accessToken) {
+        localStorage.setItem("accessToken", response.data.data.tokens.accessToken);
+      }
+      
       toast.success("Welcome back!", {
         description: "Redirecting to dashboard...",
       });
-      // Navigate to dashboard
-      router.push("/dashboard");
+      
+      // Trigger redirect
+      setShouldRedirect(true);
     } catch (error: unknown) {
       const errorMessage = 
         error && typeof error === 'object' && 'response' in error && 

@@ -36,6 +36,15 @@ export default function DashboardPage() {
     }
   }, [searchParams, router]);
 
+  // Fetch dashboard overview data
+  const { data: overview, isLoading: isLoadingOverview } = useQuery({
+    queryKey: ["dashboard", "overview"],
+    queryFn: async () => {
+      const { data } = await api.get("/dashboard/overview");
+      return data.data;
+    },
+  });
+
   const { data: accounts, isLoading } = useQuery({
     queryKey: ["instagram", "accounts"],
     queryFn: async () => {
@@ -44,13 +53,13 @@ export default function DashboardPage() {
     }
   });
 
-  const connectedAccount = accounts?.[0];
+  const connectedAccount = overview?.accounts?.[0] || accounts?.[0];
 
-  // Placeholder stats - in a real app these would come from an API
+  // Use real stats from API
   const stats = {
-     activeRules: 0,
-     eventsProcessed: connectedAccount ? 124 : 0, // Mock data for demo
-     autoReplies: connectedAccount ? 43 : 0,      // Mock data for demo
+     activeRules: overview?.totalActiveRules ?? 0,
+     eventsProcessed: overview?.totalEventsProcessed ?? 0,
+     autoReplies: overview?.totalAutoReplies ?? 0,
   };
 
   return (
@@ -99,8 +108,14 @@ export default function DashboardPage() {
             <Zap className="h-4 w-4 text-amber-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeRules}</div>
-            <p className="text-xs text-slate-500">Automation rules running</p>
+            {isLoadingOverview ? (
+              <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats.activeRules}</div>
+                <p className="text-xs text-slate-500">Automation rules running</p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -112,8 +127,14 @@ export default function DashboardPage() {
             <Activity className="h-4 w-4 text-emerald-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.eventsProcessed}</div>
-            <p className="text-xs text-slate-500">In the last 30 days</p>
+            {isLoadingOverview ? (
+              <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats.eventsProcessed}</div>
+                <p className="text-xs text-slate-500">In the last 30 days</p>
+              </>
+            )}
           </CardContent>
         </Card>
         
@@ -125,8 +146,14 @@ export default function DashboardPage() {
             <MessageSquare className="h-4 w-4 text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.autoReplies}</div>
-            <p className="text-xs text-slate-500">Sent automatically</p>
+            {isLoadingOverview ? (
+              <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{stats.autoReplies}</div>
+                <p className="text-xs text-slate-500">Sent automatically</p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -73,9 +73,10 @@ export default function NewRulePage() {
       toast.success("Rule created successfully!");
       router.push("/automation");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
+      const axiosError = error as { response?: { data?: { error?: string } } };
       toast.error("Failed to create rule", {
-         description: error.response?.data?.error || "Unknown error occurred"
+         description: axiosError.response?.data?.error || "Unknown error occurred"
       });
       setLoading(false);
     }

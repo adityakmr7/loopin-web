@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { formatDistanceToNow } from "date-fns";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -55,11 +57,27 @@ export default function DashboardPage() {
 
   const connectedAccount = overview?.accounts?.[0] || accounts?.[0];
 
-  // Use real stats from API
+  // Fetch dashboard stats with recent activity
+  const { data: dashboardStats, isLoading: isLoadingStats } = useDashboardStats(connectedAccount?.id);
+
+  // Use stats from the new API if available, otherwise fall back to overview
   const stats = {
-     activeRules: overview?.totalActiveRules ?? 0,
-     eventsProcessed: overview?.totalEventsProcessed ?? 0,
-     autoReplies: overview?.totalAutoReplies ?? 0,
+     activeRules: dashboardStats?.activeRules ?? overview?.totalActiveRules ?? 0,
+     eventsProcessed: dashboardStats?.eventsProcessed.total ?? overview?.totalEventsProcessed ?? 0,
+     autoReplies: dashboardStats?.autoReplies.total ?? overview?.totalAutoReplies ?? 0,
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "comments":
+        return "💬";
+      case "mentions":
+        return "📢";
+      case "messages":
+        return "✉️";
+      default:
+        return "📊";
+    }
   };
 
   return (
@@ -108,7 +126,7 @@ export default function DashboardPage() {
             <Zap className="h-4 w-4 text-amber-400" />
           </CardHeader>
           <CardContent>
-            {isLoadingOverview ? (
+            {isLoadingOverview && isLoadingStats ? (
               <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
             ) : (
               <>
@@ -127,7 +145,7 @@ export default function DashboardPage() {
             <Activity className="h-4 w-4 text-emerald-400" />
           </CardHeader>
           <CardContent>
-            {isLoadingOverview ? (
+            {isLoadingOverview && isLoadingStats ? (
               <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
             ) : (
               <>
@@ -146,7 +164,7 @@ export default function DashboardPage() {
             <MessageSquare className="h-4 w-4 text-blue-400" />
           </CardHeader>
           <CardContent>
-            {isLoadingOverview ? (
+            {isLoadingOverview && isLoadingStats ? (
               <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
             ) : (
               <>
@@ -158,19 +176,42 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Recent Activity Placeholder */}
+      {/* Recent Activity */}
       <Card className="bg-slate-900 border-slate-800">
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center justify-center py-12 text-center text-slate-500">
-            <Activity className="h-10 w-10 mb-4 opacity-20" />
-            <p className="text-lg font-medium text-slate-400">No activity yet</p>
-            <p className="text-sm max-w-sm mt-2">
-              Once your rules start triggering, you&apos;ll see a live feed of actions here.
-            </p>
-          </div>
+          {isLoadingStats ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+            </div>
+          ) : dashboardStats?.recentActivity && dashboardStats.recentActivity.length > 0 ? (
+            <div className="space-y-3">
+              {dashboardStats.recentActivity.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="flex items-start gap-3 p-3 bg-slate-950 rounded-lg border border-slate-800 hover:border-slate-700 transition-colors"
+                >
+                  <span className="text-2xl">{getActivityIcon(activity.type)}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-200">{activity.description}</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center text-slate-500">
+              <Activity className="h-10 w-10 mb-4 opacity-20" />
+              <p className="text-lg font-medium text-slate-400">No activity yet</p>
+              <p className="text-sm max-w-sm mt-2">
+                Once your rules start triggering, you&apos;ll see a live feed of actions here.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

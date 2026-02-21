@@ -1,8 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { User } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 
@@ -18,7 +17,6 @@ export function useAuth(redirectIfFound = false, redirectIfNotFound = false) {
 
   const {
     data: user,
-    error,
     isLoading,
     isError,
   } = useQuery<UserProfile>({
@@ -60,13 +58,17 @@ export function useLogout() {
 
   return async () => {
     try {
-      await api.post("/auth/logout");
-      queryClient.setQueryData(["auth", "user"], null);
-      router.push("/login");
+      const refreshToken = localStorage.getItem("refreshToken");
+      await api.post("/auth/logout", { refreshToken });
     } catch (error) {
-      console.error("Logout failed:", error);
+      // Proceed with client-side cleanup even if the server call fails
+      console.error("Logout request failed:", error);
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      queryClient.setQueryData(["auth", "user"], null);
+      queryClient.clear();
+      router.push("/login");
     }
   };
 }
-
-import { useQueryClient } from "@tanstack/react-query";

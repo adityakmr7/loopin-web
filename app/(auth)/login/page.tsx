@@ -41,10 +41,13 @@ export default function LoginPage() {
     try {
       const response = await api.post("/auth/login", data);
       
-      // Save the access token to localStorage
-      // API response structure: response.data.data.tokens.accessToken
+      // Save tokens to localStorage
+      // API response structure: response.data.data.tokens
       if (response.data?.data?.tokens?.accessToken) {
         localStorage.setItem("accessToken", response.data.data.tokens.accessToken);
+      }
+      if (response.data?.data?.tokens?.refreshToken) {
+        localStorage.setItem("refreshToken", response.data.data.tokens.refreshToken);
       }
       
       toast.success("Welcome back!", {
@@ -103,7 +106,7 @@ export default function LoginPage() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4">
+          <CardFooter className="flex flex-col gap-4 mt-4">
             <Button 
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" 
               type="submit"

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Zap,
-  Users,
+  BarChart2,
   Settings,
   LogOut,
   Instagram,
@@ -19,6 +19,11 @@ const sidebarItems = [
     title: "Overview",
     href: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Analytics",
+    href: "/analytics",
+    icon: BarChart2,
   },
   {
     title: "Automation",

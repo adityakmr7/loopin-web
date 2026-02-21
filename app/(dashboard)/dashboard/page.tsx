@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Instagram, MessageSquare, Zap, Activity } from "lucide-react";
+import { Instagram, MessageSquare, Zap, Activity, AtSign } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Link from "next/link";
@@ -11,8 +11,8 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useDashboardStats } from "@/hooks/useDashboardStats";
-import { formatDistanceToNow } from "date-fns";
+import { useDashboardStats, type Interaction } from "@/hooks/useDashboardStats";
+import { formatDistanceToNow, parseISO } from "date-fns";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -67,18 +67,55 @@ export default function DashboardPage() {
      autoReplies: dashboardStats?.autoReplies.total ?? overview?.totalAutoReplies ?? 0,
   };
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case "comments":
-        return "💬";
-      case "mentions":
-        return "📢";
-      case "messages":
-        return "✉️";
-      default:
-        return "📊";
-    }
-  };
+  // ── Interaction row sub-component ────────────────────────────────────────
+  function InteractionRow({ item }: { item: Interaction }) {
+    return (
+      <div className="flex flex-col gap-2 p-3 bg-slate-950 rounded-lg border border-slate-800 hover:border-slate-700 transition-colors">
+        {/* Commenter + comment bubble */}
+        <div className="flex items-start gap-2.5">
+          <div className="shrink-0 h-7 w-7 rounded-full bg-slate-800 flex items-center justify-center">
+            <AtSign className="h-3.5 w-3.5 text-slate-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-xs font-semibold text-indigo-400">@{item.commenter.username}</span>
+            <div className="mt-1 rounded-lg rounded-tl-none bg-slate-800 px-3 py-2 text-sm text-slate-200 max-w-prose">
+              {item.comment.text}
+            </div>
+            <p className="mt-1 text-[11px] text-slate-500">
+              {formatDistanceToNow(parseISO(item.comment.timestamp), { addSuffix: true })}
+            </p>
+          </div>
+        </div>
+
+        {/* Reply bubble — indented */}
+        <div className="flex items-start gap-2.5 pl-9">
+          <div className="shrink-0 h-7 w-7 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
+            <Zap className="h-3.5 w-3.5 text-indigo-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-xs font-semibold text-slate-400">Loopin</span>
+            {item.reply.sent ? (
+              <>
+                <div className="mt-1 rounded-lg rounded-tl-none bg-indigo-600/15 border border-indigo-500/20 px-3 py-2 text-sm text-indigo-100 max-w-prose">
+                  {item.reply.text}
+                </div>
+                {item.reply.repliedAt && (
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    {formatDistanceToNow(parseISO(item.reply.repliedAt), { addSuffix: true })}
+                  </p>
+                )}
+              </>
+            ) : (
+              <div className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800/50 px-2.5 py-1 text-xs text-slate-500">
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-600" />
+                No reply sent
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -159,7 +196,7 @@ export default function DashboardPage() {
         <Card className="bg-slate-900 border-slate-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-400">
-              Auto Replies
+              Auto Replies Sent
             </CardTitle>
             <MessageSquare className="h-4 w-4 text-blue-400" />
           </CardHeader>
@@ -169,46 +206,35 @@ export default function DashboardPage() {
             ) : (
               <>
                 <div className="text-2xl font-bold">{stats.autoReplies}</div>
-                <p className="text-xs text-slate-500">Sent automatically</p>
+                <p className="text-xs text-slate-500">Comments with a reply sent</p>
               </>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent Interactions */}
       <Card className="bg-slate-900 border-slate-800">
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle>Recent Interactions</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoadingStats ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
             </div>
-          ) : dashboardStats?.recentActivity && dashboardStats.recentActivity.length > 0 ? (
+          ) : dashboardStats?.recentInteractions && dashboardStats.recentInteractions.length > 0 ? (
             <div className="space-y-3">
-              {dashboardStats.recentActivity.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-start gap-3 p-3 bg-slate-950 rounded-lg border border-slate-800 hover:border-slate-700 transition-colors"
-                >
-                  <span className="text-2xl">{getActivityIcon(activity.type)}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-200">{activity.description}</p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
-                    </p>
-                  </div>
-                </div>
+              {dashboardStats.recentInteractions.map((item) => (
+                <InteractionRow key={item.id} item={item} />
               ))}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center text-slate-500">
               <Activity className="h-10 w-10 mb-4 opacity-20" />
-              <p className="text-lg font-medium text-slate-400">No activity yet</p>
+              <p className="text-lg font-medium text-slate-400">No interactions yet</p>
               <p className="text-sm max-w-sm mt-2">
-                Once your rules start triggering, you&apos;ll see a live feed of actions here.
+                Once your rules start triggering, you&apos;ll see a live feed of comment threads here.
               </p>
             </div>
           )}

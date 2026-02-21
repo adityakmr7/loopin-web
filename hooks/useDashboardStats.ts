@@ -1,11 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 
-export interface Activity {
+export interface Interaction {
   id: string;
-  type: string;
-  description: string;
-  timestamp: string;
+  commenter: {
+    username: string;
+  };
+  comment: {
+    text: string;
+    timestamp: string;
+  };
+  reply: {
+    sent: boolean;
+    text?: string;
+    repliedAt?: string;
+  };
 }
 
 export interface DashboardStats {
@@ -18,7 +27,7 @@ export interface DashboardStats {
     total: number;
     period: string;
   };
-  recentActivity: Activity[];
+  recentInteractions: Interaction[];
 }
 
 export function useDashboardStats(accountId: string | undefined) {
@@ -28,7 +37,7 @@ export function useDashboardStats(accountId: string | undefined) {
       if (!accountId) {
         throw new Error("Account ID is required");
       }
-      
+
       const { data } = await api.get(`/dashboard/stats?accountId=${accountId}`);
       return data.data;
     },

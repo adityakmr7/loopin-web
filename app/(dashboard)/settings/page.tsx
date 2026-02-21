@@ -111,7 +111,7 @@ function TagInput({
   };
 
   return (
-    <div className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 min-h-[42px] flex flex-wrap gap-1.5 focus-within:border-indigo-500 transition-colors">
+    <div className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 min-h-10.5 flex flex-wrap gap-1.5 focus-within:border-indigo-500 transition-colors">
       {value.map((tag) => (
         <span
           key={tag}
@@ -129,7 +129,7 @@ function TagInput({
         </span>
       ))}
       <input
-        className="flex-1 min-w-[140px] bg-transparent outline-none text-sm text-slate-200 placeholder:text-slate-500"
+        className="flex-1 min-w-35 bg-transparent outline-none text-sm text-slate-200 placeholder:text-slate-500"
         value={inputVal}
         onChange={(e) => setInputVal(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -263,7 +263,7 @@ export default function SettingsPage() {
 
   // ── Sessions ──────────────────────────────────────────────────────────────
   const { data: sessions, isLoading: loadingSessions } = useSessions();
-  const { mutate: revokeSession, isPending: revoking } = useRevokeSession();
+  const { mutate: revokeSession } = useRevokeSession();
   const { mutate: logoutAll, isPending: loggingOutAll } = useLogoutAllSessions();
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
@@ -460,7 +460,7 @@ export default function SettingsPage() {
                   Notify me when my Instagram token is about to expire
                 </p>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  We'll alert you before your auth token expires so automation keeps running.
+                   We&apos;ll alert you before your auth token expires so automation keeps running.
                 </p>
               </div>
               <Switch

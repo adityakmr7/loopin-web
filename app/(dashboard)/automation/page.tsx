@@ -1,22 +1,15 @@
 "use client";
 
-import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Loader2, Plus, Zap, MessageSquare, AtSign, Trash2, Edit } from "lucide-react";
+import { Loader2, Plus, Zap, MessageSquare, AtSign, Trash2, Edit, Mail } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-
-interface Action {
-  reply: string;
-  like: boolean;
-}
 
 interface AutomationRule {
   id: string;
@@ -25,6 +18,7 @@ interface AutomationRule {
   trigger: "comment" | "mention" | "message";
   isActive: boolean;
   triggerCount: number;
+  dmCount?: number;
   lastTriggered: string | null;
   createdAt: string;
   account: {
@@ -123,6 +117,12 @@ export default function AutomationPage() {
                          <Zap className="h-3 w-3" />
                          <span>{rule.triggerCount} runs</span>
                       </div>
+                      {rule.dmCount != null && rule.dmCount > 0 && (
+                        <div className="flex items-center gap-2 text-sm bg-emerald-950/30 px-3 py-1.5 rounded-full border border-emerald-800/40">
+                          <Mail className="h-3 w-3 text-emerald-400" />
+                          <span className="text-emerald-400">{rule.dmCount} DMs</span>
+                        </div>
+                      )}
                       <Switch 
                          checked={rule.isActive}
                          onCheckedChange={(checked) => toggleMutation.mutate({ id: rule.id, isActive: checked })}

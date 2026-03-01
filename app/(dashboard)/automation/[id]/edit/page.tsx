@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, ArrowLeft } from "lucide-react";
+import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, ArrowLeft, Variable } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useRouter, useParams } from "next/navigation";
@@ -20,6 +20,46 @@ interface Account {
   username: string;
 }
 
+const TEMPLATE_VARS = [
+  { label: "{{name}}", title: "Commenter's display name" },
+  { label: "{{username}}", title: "Commenter's @handle" },
+  { label: "{{keyword}}", title: "The keyword that triggered this rule" },
+  { label: "{{account}}", title: "Your connected account's @handle" },
+];
+
+function VariablePicker({ onInsert }: { onInsert: (v: string) => void }) {
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap pt-1">
+      <Variable className="h-3 w-3 text-slate-500 shrink-0" />
+      <span className="text-xs text-slate-500">Variables:</span>
+      {TEMPLATE_VARS.map((v) => (
+        <button
+          key={v.label}
+          type="button"
+          title={v.title}
+          onClick={() => onInsert(v.label)}
+          className="text-xs px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors font-mono"
+        >
+          {v.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Safely extract a human-readable string from any API error shape
+function getErrorMessage(error: unknown, fallback = "An unknown error occurred"): string {
+  const err = error as { response?: { data?: { error?: unknown; message?: unknown } }; message?: string };
+  const apiError = err?.response?.data?.error ?? err?.response?.data?.message;
+  if (typeof apiError === "string") return apiError;
+  if (apiError && typeof apiError === "object") {
+    const obj = apiError as { message?: unknown };
+    if (typeof obj.message === "string") return obj.message;
+  }
+  if (typeof err?.message === "string") return err.message;
+  return fallback;
+}
+
 interface UpdateRuleData {
   name: string;
   description: string;
@@ -29,8 +69,10 @@ interface UpdateRuleData {
     text_contains: string[];
   };
   actions: {
-    reply: string;
-    like: boolean;
+    reply?: string;
+    like?: boolean;
+    hide?: boolean;
+    comment_to_dm?: string;
   };
 }
 
@@ -43,10 +85,13 @@ interface AutomationRule {
     text_contains: string[];
   };
   actions: {
-    reply: string;
-    like: boolean;
+    reply?: string;
+    like?: boolean;
+    hide?: boolean;
+    comment_to_dm?: string;
   };
   isActive: boolean;
+  dmCount?: number;
   account: {
     id: string;
     username: string;
@@ -98,9 +143,14 @@ export default function EditRulePage() {
     },
     actions: {
       reply: "",
-      like: true
+      like: true,
+      hide: false,
+      comment_to_dm: undefined,
     }
   });
+
+  // Track DM enabled separately so we can omit comment_to_dm when off
+  const [dmEnabled, setDmEnabled] = useState(!!rule?.actions.comment_to_dm);
 
   const [keywords, setKeywords] = useState<string[]>(rule?.conditions.text_contains || []);
   const [inputKeyword, setInputKeyword] = useState("");
@@ -114,9 +164,8 @@ export default function EditRulePage() {
       router.push("/automation");
     },
     onError: (error: unknown) => {
-      const err = error as { response?: { data?: { error?: string } } };
       toast.error("Failed to update rule", {
-         description: err.response?.data?.error || "Unknown error occurred"
+         description: getErrorMessage(error)
       });
       setLoading(false);
     }
@@ -127,10 +176,21 @@ export default function EditRulePage() {
       toast.error("Please select an account and name your rule");
       return;
     }
-    
+
+    // Build clean actions — omit comment_to_dm when not enabled or empty
+    const actions: UpdateRuleData["actions"] = {
+      reply: formData.actions.reply,
+      like: formData.actions.like,
+      hide: formData.actions.hide,
+    };
+    if (dmEnabled && formData.actions.comment_to_dm?.trim()) {
+      actions.comment_to_dm = formData.actions.comment_to_dm.trim();
+    }
+
     setLoading(true);
     updateMutation.mutate({
        ...formData,
+       actions,
        conditions: {
           text_contains: keywords
        }
@@ -286,38 +346,98 @@ export default function EditRulePage() {
              </div>
           )}
 
-          {step === 3 && (
+           {step === 3 && (
              <div className="space-y-6">
                 <div className="space-y-4">
-                   <div className="flex items-center justify-between">
-                      <Label className="text-base">Like Comment?</Label>
+                   {/* Like toggle */}
+                   <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-4 py-3">
+                      <div>
+                         <Label className="text-sm font-medium">Like Comment</Label>
+                         <p className="text-xs text-slate-500 mt-0.5">Automatically like the comment that matched this rule.</p>
+                      </div>
                       <Switch 
-                         checked={formData.actions.like}
+                         checked={formData.actions.like ?? false}
                          onCheckedChange={(c) => setFormData({
                             ...formData, 
                             actions: { ...formData.actions, like: c }
                          })}
+                         className="data-[state=checked]:bg-indigo-600"
                       />
                    </div>
-                   
-                   <div className="space-y-2">
-                      <Label>Reply with Message</Label>
-                      <Textarea 
-                         placeholder="Hey! Thanks for the comment! 🔥" 
-                         className="bg-slate-950 border-slate-800 min-h-[120px]"
-                         value={formData.actions.reply}
-                         onChange={(e) => setFormData({
+
+                   {/* Hide toggle */}
+                   <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-4 py-3">
+                      <div>
+                         <Label className="text-sm font-medium">Hide Comment</Label>
+                         <p className="text-xs text-slate-500 mt-0.5">Hide the matched comment from other users.</p>
+                      </div>
+                      <Switch 
+                         checked={formData.actions.hide ?? false}
+                         onCheckedChange={(c) => setFormData({
                             ...formData, 
+                            actions: { ...formData.actions, hide: c }
+                         })}
+                         className="data-[state=checked]:bg-amber-600"
+                      />
+                   </div>
+
+                   {/* Reply textarea */}
+                   <div className="space-y-2">
+                      <Label>Reply with Comment</Label>
+                      <p className="text-xs text-slate-500">Post a public reply under the matched comment.</p>
+                      <Textarea
+                         placeholder="Hey {{name}}! Thanks for the comment! 🔥"
+                         className="bg-slate-950 border-slate-800 min-h-25"
+                         value={formData.actions.reply ?? ""}
+                         onChange={(e) => setFormData({
+                            ...formData,
                             actions: { ...formData.actions, reply: e.target.value }
                          })}
                       />
+                      <VariablePicker onInsert={(v) => setFormData({ ...formData, actions: { ...formData.actions, reply: (formData.actions.reply ?? "") + v } })} />
                       <p className="text-xs text-slate-500 text-right">
-                         {formData.actions.reply.length} / 1000 characters
+                         {(formData.actions.reply ?? "").length} / 1000 characters
                       </p>
+                   </div>
+
+                   {/* Send DM toggle + textarea */}
+                   <div className="rounded-lg border border-slate-800 bg-slate-950 overflow-hidden">
+                      <div className="flex items-center justify-between px-4 py-3">
+                         <div>
+                            <Label className="text-sm font-medium">Send DM to commenter</Label>
+                            <p className="text-xs text-slate-500 mt-0.5">Send a private Instagram DM to the person who commented.</p>
+                         </div>
+                         <Switch 
+                            checked={dmEnabled}
+                            onCheckedChange={(c) => {
+                               setDmEnabled(c);
+                               if (!c) setFormData({ ...formData, actions: { ...formData.actions, comment_to_dm: undefined } });
+                            }}
+                            className="data-[state=checked]:bg-emerald-600"
+                         />
+                      </div>
+                      {dmEnabled && (
+                         <div className="px-4 pb-4 space-y-2 border-t border-slate-800">
+                            <Textarea
+                               placeholder="Hey {{name}}! Check out our full catalogue here → ..."
+                               className="bg-slate-900 border-slate-700 min-h-25 mt-3"
+                               maxLength={1000}
+                               value={formData.actions.comment_to_dm ?? ""}
+                               onChange={(e) => setFormData({
+                                  ...formData,
+                                  actions: { ...formData.actions, comment_to_dm: e.target.value }
+                               })}
+                            />
+                            <VariablePicker onInsert={(v) => setFormData({ ...formData, actions: { ...formData.actions, comment_to_dm: (formData.actions.comment_to_dm ?? "") + v } })} />
+                            <p className="text-xs text-slate-500 text-right">
+                               {(formData.actions.comment_to_dm ?? "").length} / 1000 characters
+                            </p>
+                         </div>
+                      )}
                    </div>
                 </div>
              </div>
-          )}
+           )}
 
           <div className="flex justify-between pt-6 border-t border-slate-800">
              <Button 

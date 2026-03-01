@@ -10,6 +10,9 @@ import {
   Settings,
   LogOut,
   Instagram,
+  Users,
+  MessageSquare,
+  CreditCard,
 } from "lucide-react";
 import { useLogout } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -31,9 +34,24 @@ const sidebarItems = [
     icon: Zap,
   },
   {
+    title: "Contacts",
+    href: "/contacts",
+    icon: Users,
+  },
+  {
+    title: "Inbox",
+    href: "/inbox",
+    icon: MessageSquare,
+  },
+  {
     title: "Accounts",
     href: "/accounts",
     icon: Instagram,
+  },
+  {
+    title: "Billing",
+    href: "/billing",
+    icon: CreditCard,
   },
   {
     title: "Settings",

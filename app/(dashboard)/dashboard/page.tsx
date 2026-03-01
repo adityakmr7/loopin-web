@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Instagram, MessageSquare, Zap, Activity, AtSign } from "lucide-react";
+import { Instagram, MessageSquare, Zap, Activity, AtSign, Mail } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Link from "next/link";
@@ -99,11 +99,19 @@ export default function DashboardPage() {
                 <div className="mt-1 rounded-lg rounded-tl-none bg-indigo-600/15 border border-indigo-500/20 px-3 py-2 text-sm text-indigo-100 max-w-prose">
                   {item.reply.text}
                 </div>
-                {item.reply.repliedAt && (
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    {formatDistanceToNow(parseISO(item.reply.repliedAt), { addSuffix: true })}
-                  </p>
-                )}
+                <div className="mt-1 flex items-center gap-2 flex-wrap">
+                  {item.reply.repliedAt && (
+                    <p className="text-[11px] text-slate-500">
+                      {formatDistanceToNow(parseISO(item.reply.repliedAt), { addSuffix: true })}
+                    </p>
+                  )}
+                  {item.dmSent && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-950/40 border border-emerald-700/40 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                      <Mail className="h-2.5 w-2.5" />
+                      DM sent
+                    </span>
+                  )}
+                </div>
               </>
             ) : (
               <div className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800/50 px-2.5 py-1 text-xs text-slate-500">

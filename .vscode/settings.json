@@ -3,15 +3,13 @@
   // --- Your Original Theme & UI Customizations ---
   "workbench.colorCustomizations": {
     "activityBar.activeBackground": "#6c5ce7",
- "activityBar.background": "#382B15",
+    "activityBar.background": "#382B15",
     "activityBar.foreground": "#ffffff",
     "activityBar.inactiveForeground": "#ffffff99",
     "activityBarBadge.background": "#fd79a8",
     "activityBarBadge.foreground": "#ffffff",
     "commandCenter.border": "#ffffff99",
     "sash.hoverBorder": "#6c5ce7",
-    "statusBar.background": "#4834d4",
-    "statusBar.foreground": "#ffffff",
     "statusBarItem.hoverBackground": "#686de0",
     "statusBarItem.remoteBackground": "#4834d4",
     "statusBarItem.remoteForeground": "#ffffff",

@@ -15,6 +15,7 @@ export interface Interaction {
     text?: string;
     repliedAt?: string;
   };
+  dmSent?: boolean;
 }
 
 export interface DashboardStats {

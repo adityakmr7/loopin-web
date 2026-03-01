@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, Variable, ImageIcon } from "lucide-react";
+import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, Variable, ImageIcon, MessageCircle } from "lucide-react";
 import { PostFilterPicker } from "@/components/automation/PostFilterPicker";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
@@ -75,6 +75,7 @@ interface CreateRuleData {
     like?: boolean;
     hide?: boolean;
     comment_to_dm?: string;
+    reply_dm?: string;
   };
 }
 
@@ -100,7 +101,7 @@ export default function NewRulePage() {
     }
   });
 
-  // Separate toggle state so comment_to_dm is omitted when disabled
+  // Separate toggle state so comment_to_dm / reply_dm is omitted when disabled
   const [dmEnabled, setDmEnabled] = useState(false);
 
   const [keywords, setKeywords] = useState<string[]>([]);
@@ -136,14 +137,19 @@ export default function NewRulePage() {
       return;
     }
 
-    // Build clean actions — omit comment_to_dm when not enabled or empty
-    const actions: CreateRuleData["actions"] = {
-      reply: formData.actions.reply,
-      like: formData.actions.like,
-      hide: formData.actions.hide,
-    };
-    if (dmEnabled && formData.actions.comment_to_dm?.trim()) {
-      actions.comment_to_dm = formData.actions.comment_to_dm.trim();
+    // Build clean actions based on trigger type
+    const actions: CreateRuleData["actions"] = {};
+    if (formData.trigger === "message") {
+      if (dmEnabled && formData.actions.reply_dm?.trim()) {
+        actions.reply_dm = formData.actions.reply_dm.trim();
+      }
+    } else {
+      actions.reply = formData.actions.reply;
+      actions.like = formData.actions.like;
+      actions.hide = formData.actions.hide;
+      if (dmEnabled && formData.actions.comment_to_dm?.trim()) {
+        actions.comment_to_dm = formData.actions.comment_to_dm.trim();
+      }
     }
 
     setLoading(true);
@@ -222,20 +228,27 @@ export default function NewRulePage() {
 
                 <div className="space-y-3">
                    <Label>Trigger Event</Label>
-                   <div className="grid grid-cols-2 gap-4">
-                      <div 
+                   <div className="grid grid-cols-3 gap-3">
+                      <div
                         className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", formData.trigger === "comment" ? "bg-indigo-900/20 border-indigo-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
-                        onClick={() => setFormData({...formData, trigger: "comment"})}
+                        onClick={() => { setFormData({...formData, trigger: "comment", postFilter: []}); setDmEnabled(false); }}
                       >
                          <MessageSquare className={cn("h-5 w-5", formData.trigger === "comment" ? "text-indigo-400" : "text-slate-500")} />
                          <span className="font-medium text-sm">New Comment</span>
                       </div>
-                      <div 
+                      <div
                         className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", formData.trigger === "mention" ? "bg-purple-900/20 border-purple-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
-                        onClick={() => setFormData({...formData, trigger: "mention"})}
+                        onClick={() => { setFormData({...formData, trigger: "mention", postFilter: []}); setDmEnabled(false); }}
                       >
                          <AtSign className={cn("h-5 w-5", formData.trigger === "mention" ? "text-purple-400" : "text-slate-500")} />
                          <span className="font-medium text-sm">Mentioned in Story</span>
+                      </div>
+                      <div
+                        className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", formData.trigger === "message" ? "bg-emerald-900/20 border-emerald-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
+                        onClick={() => { setFormData({...formData, trigger: "message", postFilter: []}); setDmEnabled(true); }}
+                      >
+                         <MessageCircle className={cn("h-5 w-5", formData.trigger === "message" ? "text-emerald-400" : "text-slate-500")} />
+                         <span className="font-medium text-sm">DM Received</span>
                       </div>
                    </div>
                 </div>
@@ -254,7 +267,9 @@ export default function NewRulePage() {
                    </p>
 
                    <div className="space-y-2">
-                      <Label className="text-xs uppercase text-slate-500">Keywords (Exact or partial match)</Label>
+                      <Label className="text-xs uppercase text-slate-500">
+                        {formData.trigger === "message" ? "Keywords in DM (Exact or partial match)" : "Keywords (Exact or partial match)"}
+                      </Label>
                       <div className="flex gap-2">
                          <Input
                             placeholder="Type keyword & press Enter"
@@ -304,17 +319,44 @@ export default function NewRulePage() {
 
            {step === 3 && (
              <div className="space-y-6">
-                <div className="space-y-4">
+                {formData.trigger === "message" ? (
+                  /* DM trigger: only reply_dm action */
+                  <div className="space-y-4">
+                    <div className="rounded-lg border border-emerald-800/50 bg-emerald-950/20 px-4 py-3 text-sm text-emerald-300">
+                      <strong>DM Keyword Automation</strong> — When someone sends you a DM containing the keywords you defined, Loopin will automatically reply.
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Auto-reply DM message</Label>
+                      <p className="text-xs text-slate-500">This message will be sent as a DM reply when triggered.</p>
+                      <Textarea
+                        placeholder="Hey {{name}}! Thanks for reaching out. Here's what you need to know…"
+                        className="bg-slate-950 border-slate-800 min-h-28"
+                        maxLength={1000}
+                        value={formData.actions.reply_dm ?? ""}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          actions: { ...formData.actions, reply_dm: e.target.value }
+                        })}
+                      />
+                      <VariablePicker onInsert={(v) => setFormData({ ...formData, actions: { ...formData.actions, reply_dm: (formData.actions.reply_dm ?? "") + v } })} />
+                      <p className="text-xs text-slate-500 text-right">
+                        {(formData.actions.reply_dm ?? "").length} / 1000 characters
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  /* comment / mention trigger actions */
+                  <div className="space-y-4">
                    {/* Hide toggle */}
                    <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-4 py-3">
                       <div>
                          <Label className="text-sm font-medium">Hide Comment</Label>
                          <p className="text-xs text-slate-500 mt-0.5">Hide the matched comment from other users.</p>
                       </div>
-                      <Switch 
+                      <Switch
                          checked={formData.actions.hide ?? false}
                          onCheckedChange={(c) => setFormData({
-                            ...formData, 
+                            ...formData,
                             actions: { ...formData.actions, hide: c }
                          })}
                          className="data-[state=checked]:bg-amber-600"
@@ -347,7 +389,7 @@ export default function NewRulePage() {
                             <Label className="text-sm font-medium">Send DM to commenter</Label>
                             <p className="text-xs text-slate-500 mt-0.5">Send a private Instagram DM to the person who commented.</p>
                          </div>
-                         <Switch 
+                         <Switch
                             checked={dmEnabled}
                             onCheckedChange={(c) => {
                                setDmEnabled(c);
@@ -375,7 +417,8 @@ export default function NewRulePage() {
                          </div>
                       )}
                    </div>
-                </div>
+                  </div>
+                )}
              </div>
            )}
 

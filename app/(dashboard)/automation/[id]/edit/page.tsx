@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, ArrowLeft, Variable, ImageIcon } from "lucide-react";
+import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, ArrowLeft, Variable, ImageIcon, MessageCircle } from "lucide-react";
 import { PostFilterPicker } from "@/components/automation/PostFilterPicker";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
@@ -48,7 +48,6 @@ function VariablePicker({ onInsert }: { onInsert: (v: string) => void }) {
   );
 }
 
-// Safely extract a human-readable string from any API error shape
 function getErrorMessage(error: unknown, fallback = "An unknown error occurred"): string {
   const err = error as { response?: { data?: { error?: unknown; message?: unknown } }; message?: string };
   const apiError = err?.response?.data?.error ?? err?.response?.data?.message;
@@ -75,6 +74,7 @@ interface UpdateRuleData {
     like?: boolean;
     hide?: boolean;
     comment_to_dm?: string;
+    reply_dm?: string;
   };
 }
 
@@ -92,6 +92,7 @@ interface AutomationRule {
     like?: boolean;
     hide?: boolean;
     comment_to_dm?: string;
+    reply_dm?: string;
   };
   isActive: boolean;
   dmCount?: number;
@@ -105,11 +106,10 @@ export default function EditRulePage() {
   const router = useRouter();
   const params = useParams();
   const ruleId = params.id as string;
-  
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  
-  // Fetch existing rule data
+
   const { data: rule, isLoading: isLoadingRule } = useQuery<AutomationRule>({
     queryKey: ["automation", "rule", ruleId],
     queryFn: async () => {
@@ -119,7 +119,6 @@ export default function EditRulePage() {
     enabled: !!ruleId
   });
 
-  // Fetch accounts
   const { data: accounts } = useQuery<Account[]>({
     queryKey: ["instagram", "accounts"],
     queryFn: async () => {
@@ -128,7 +127,6 @@ export default function EditRulePage() {
     }
   });
 
-  // Initialize form data - use rule data if available, otherwise use defaults
   const [formData, setFormData] = useState<UpdateRuleData>(() => rule ? {
     name: rule.name,
     description: rule.description || "",
@@ -143,20 +141,13 @@ export default function EditRulePage() {
     accountId: "",
     trigger: "comment",
     postFilter: [],
-    conditions: {
-      text_contains: []
-    },
-    actions: {
-      reply: "",
-      like: true,
-      hide: false,
-      comment_to_dm: undefined,
-    }
+    conditions: { text_contains: [] },
+    actions: { reply: "", like: true, hide: false, comment_to_dm: undefined, reply_dm: undefined }
   });
 
-  // Track DM enabled separately so we can omit comment_to_dm when off
-  const [dmEnabled, setDmEnabled] = useState(!!rule?.actions.comment_to_dm);
-
+  const [dmEnabled, setDmEnabled] = useState(
+    !!(rule?.actions.comment_to_dm || rule?.actions.reply_dm)
+  );
   const [keywords, setKeywords] = useState<string[]>(rule?.conditions.text_contains || []);
   const [inputKeyword, setInputKeyword] = useState("");
 
@@ -169,9 +160,7 @@ export default function EditRulePage() {
       router.push("/automation");
     },
     onError: (error: unknown) => {
-      toast.error("Failed to update rule", {
-         description: getErrorMessage(error)
-      });
+      toast.error("Failed to update rule", { description: getErrorMessage(error) });
       setLoading(false);
     }
   });
@@ -182,24 +171,22 @@ export default function EditRulePage() {
       return;
     }
 
-    // Build clean actions — omit comment_to_dm when not enabled or empty
-    const actions: UpdateRuleData["actions"] = {
-      reply: formData.actions.reply,
-      like: formData.actions.like,
-      hide: formData.actions.hide,
-    };
-    if (dmEnabled && formData.actions.comment_to_dm?.trim()) {
-      actions.comment_to_dm = formData.actions.comment_to_dm.trim();
+    const actions: UpdateRuleData["actions"] = {};
+    if (formData.trigger === "message") {
+      if (dmEnabled && formData.actions.reply_dm?.trim()) {
+        actions.reply_dm = formData.actions.reply_dm.trim();
+      }
+    } else {
+      actions.reply = formData.actions.reply;
+      actions.like = formData.actions.like;
+      actions.hide = formData.actions.hide;
+      if (dmEnabled && formData.actions.comment_to_dm?.trim()) {
+        actions.comment_to_dm = formData.actions.comment_to_dm.trim();
+      }
     }
 
     setLoading(true);
-    updateMutation.mutate({
-       ...formData,
-       actions,
-       conditions: {
-          text_contains: keywords
-       }
-    });
+    updateMutation.mutate({ ...formData, actions, conditions: { text_contains: keywords } });
   };
 
   const addKeyword = () => {
@@ -217,16 +204,13 @@ export default function EditRulePage() {
     );
   }
 
-  // Don't render the form until we have rule data
-  if (!rule) {
-    return null;
-  }
+  if (!rule) return null;
 
   return (
     <div className="max-w-2xl mx-auto space-y-8" key={ruleId}>
       <div>
-        <Link 
-          href="/automation" 
+        <Link
+          href="/automation"
           className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-slate-300 mb-4 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -236,7 +220,6 @@ export default function EditRulePage() {
         <p className="text-slate-400">Update your automation logic</p>
       </div>
 
-      {/* Progress Steps */}
       <div className="flex items-center gap-4 text-sm font-medium">
          <div className={cn("flex items-center gap-2", step >= 1 ? "text-indigo-400" : "text-slate-500")}>
             <div className={cn("h-6 w-6 rounded-full flex items-center justify-center border", step >= 1 ? "bg-indigo-500/10 border-indigo-500/50" : "border-slate-700")}>1</div>
@@ -256,22 +239,22 @@ export default function EditRulePage() {
 
       <Card className="bg-slate-900 border-slate-800">
         <CardContent className="p-6 space-y-6">
-          
+
           {step === 1 && (
              <div className="space-y-6">
                 <div className="space-y-2">
                    <Label>Rule Name</Label>
-                   <Input 
-                      placeholder="e.g. Pricing Auto-Reply" 
+                   <Input
+                      placeholder="e.g. Pricing Auto-Reply"
                       className="bg-slate-950 border-slate-800"
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
                    />
                 </div>
-                
+
                 <div className="space-y-2">
                    <Label>Select Account</Label>
-                   <Select 
+                   <Select
                       onValueChange={(val) => setFormData({...formData, accountId: val})}
                       value={formData.accountId}
                    >
@@ -288,20 +271,27 @@ export default function EditRulePage() {
 
                 <div className="space-y-3">
                    <Label>Trigger Event</Label>
-                   <div className="grid grid-cols-2 gap-4">
-                      <div 
+                   <div className="grid grid-cols-3 gap-3">
+                      <div
                         className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", formData.trigger === "comment" ? "bg-indigo-900/20 border-indigo-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
-                        onClick={() => setFormData({...formData, trigger: "comment"})}
+                        onClick={() => { setFormData({...formData, trigger: "comment", postFilter: []}); setDmEnabled(false); }}
                       >
                          <MessageSquare className={cn("h-5 w-5", formData.trigger === "comment" ? "text-indigo-400" : "text-slate-500")} />
                          <span className="font-medium text-sm">New Comment</span>
                       </div>
-                      <div 
+                      <div
                         className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", formData.trigger === "mention" ? "bg-purple-900/20 border-purple-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
-                        onClick={() => setFormData({...formData, trigger: "mention"})}
+                        onClick={() => { setFormData({...formData, trigger: "mention", postFilter: []}); setDmEnabled(false); }}
                       >
                          <AtSign className={cn("h-5 w-5", formData.trigger === "mention" ? "text-purple-400" : "text-slate-500")} />
                          <span className="font-medium text-sm">Mentioned in Story</span>
+                      </div>
+                      <div
+                        className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", formData.trigger === "message" ? "bg-emerald-900/20 border-emerald-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
+                        onClick={() => { setFormData({...formData, trigger: "message", postFilter: []}); setDmEnabled(true); }}
+                      >
+                         <MessageCircle className={cn("h-5 w-5", formData.trigger === "message" ? "text-emerald-400" : "text-slate-500")} />
+                         <span className="font-medium text-sm">DM Received</span>
                       </div>
                    </div>
                 </div>
@@ -316,11 +306,15 @@ export default function EditRulePage() {
                       Wait! Only run if...
                    </h3>
                    <p className="text-xs text-slate-400 mb-4">
-                      Define keywords that must be present in the comment for this rule to trigger.
+                      {formData.trigger === "message"
+                        ? "Define keywords that must be present in the DM for this rule to trigger."
+                        : "Define keywords that must be present in the comment for this rule to trigger."}
                    </p>
 
                    <div className="space-y-2">
-                      <Label className="text-xs uppercase text-slate-500">Keywords (Exact or partial match)</Label>
+                      <Label className="text-xs uppercase text-slate-500">
+                        {formData.trigger === "message" ? "Keywords in DM (Exact or partial match)" : "Keywords (Exact or partial match)"}
+                      </Label>
                       <div className="flex gap-2">
                          <Input
                             placeholder="Type keyword & press Enter"
@@ -343,7 +337,9 @@ export default function EditRulePage() {
                             </span>
                          ))}
                          {keywords.length === 0 && (
-                            <span className="text-sm text-slate-500 italic">No keywords added (Runs on all comments)</span>
+                            <span className="text-sm text-slate-500 italic">
+                              {formData.trigger === "message" ? "No keywords added (Runs on all DMs)" : "No keywords added (Runs on all comments)"}
+                            </span>
                          )}
                       </div>
                    </div>
@@ -370,24 +366,44 @@ export default function EditRulePage() {
 
            {step === 3 && (
              <div className="space-y-6">
-                <div className="space-y-4">
-                   {/* Hide toggle */}
+                {formData.trigger === "message" ? (
+                  <div className="space-y-4">
+                    <div className="rounded-lg border border-emerald-800/50 bg-emerald-950/20 px-4 py-3 text-sm text-emerald-300">
+                      <strong>DM Keyword Automation</strong> — When someone sends you a DM containing the keywords you defined, Loopin will automatically reply.
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Auto-reply DM message</Label>
+                      <p className="text-xs text-slate-500">This message will be sent as a DM reply when triggered.</p>
+                      <Textarea
+                        placeholder="Hey {{name}}! Thanks for reaching out. Here's what you need to know…"
+                        className="bg-slate-950 border-slate-800 min-h-28"
+                        maxLength={1000}
+                        value={formData.actions.reply_dm ?? ""}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          actions: { ...formData.actions, reply_dm: e.target.value }
+                        })}
+                      />
+                      <VariablePicker onInsert={(v) => setFormData({ ...formData, actions: { ...formData.actions, reply_dm: (formData.actions.reply_dm ?? "") + v } })} />
+                      <p className="text-xs text-slate-500 text-right">
+                        {(formData.actions.reply_dm ?? "").length} / 1000 characters
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
                    <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-4 py-3">
                       <div>
                          <Label className="text-sm font-medium">Hide Comment</Label>
                          <p className="text-xs text-slate-500 mt-0.5">Hide the matched comment from other users.</p>
                       </div>
-                      <Switch 
+                      <Switch
                          checked={formData.actions.hide ?? false}
-                         onCheckedChange={(c) => setFormData({
-                            ...formData, 
-                            actions: { ...formData.actions, hide: c }
-                         })}
+                         onCheckedChange={(c) => setFormData({ ...formData, actions: { ...formData.actions, hide: c } })}
                          className="data-[state=checked]:bg-amber-600"
                       />
                    </div>
 
-                   {/* Reply textarea */}
                    <div className="space-y-2">
                       <Label>Reply with Comment</Label>
                       <p className="text-xs text-slate-500">Post a public reply under the matched comment.</p>
@@ -395,10 +411,7 @@ export default function EditRulePage() {
                          placeholder="Hey {{name}}! Thanks for the comment! 🔥"
                          className="bg-slate-950 border-slate-800 min-h-25"
                          value={formData.actions.reply ?? ""}
-                         onChange={(e) => setFormData({
-                            ...formData,
-                            actions: { ...formData.actions, reply: e.target.value }
-                         })}
+                         onChange={(e) => setFormData({ ...formData, actions: { ...formData.actions, reply: e.target.value } })}
                       />
                       <VariablePicker onInsert={(v) => setFormData({ ...formData, actions: { ...formData.actions, reply: (formData.actions.reply ?? "") + v } })} />
                       <p className="text-xs text-slate-500 text-right">
@@ -406,14 +419,13 @@ export default function EditRulePage() {
                       </p>
                    </div>
 
-                   {/* Send DM toggle + textarea */}
                    <div className="rounded-lg border border-slate-800 bg-slate-950 overflow-hidden">
                       <div className="flex items-center justify-between px-4 py-3">
                          <div>
                             <Label className="text-sm font-medium">Send DM to commenter</Label>
                             <p className="text-xs text-slate-500 mt-0.5">Send a private Instagram DM to the person who commented.</p>
                          </div>
-                         <Switch 
+                         <Switch
                             checked={dmEnabled}
                             onCheckedChange={(c) => {
                                setDmEnabled(c);
@@ -429,10 +441,7 @@ export default function EditRulePage() {
                                className="bg-slate-900 border-slate-700 min-h-25 mt-3"
                                maxLength={1000}
                                value={formData.actions.comment_to_dm ?? ""}
-                               onChange={(e) => setFormData({
-                                  ...formData,
-                                  actions: { ...formData.actions, comment_to_dm: e.target.value }
-                               })}
+                               onChange={(e) => setFormData({ ...formData, actions: { ...formData.actions, comment_to_dm: e.target.value } })}
                             />
                             <VariablePicker onInsert={(v) => setFormData({ ...formData, actions: { ...formData.actions, comment_to_dm: (formData.actions.comment_to_dm ?? "") + v } })} />
                             <p className="text-xs text-slate-500 text-right">
@@ -441,26 +450,27 @@ export default function EditRulePage() {
                          </div>
                       )}
                    </div>
-                </div>
+                  </div>
+                )}
              </div>
            )}
 
           <div className="flex justify-between pt-6 border-t border-slate-800">
-             <Button 
-                variant="ghost" 
+             <Button
+                variant="ghost"
                 onClick={() => setStep(s => Math.max(1, s - 1))}
                 disabled={step === 1}
              >
                 Back
              </Button>
-             
+
              {step < 3 ? (
                 <Button onClick={() => setStep(s => Math.min(3, s + 1))}>
                    Next <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
              ) : (
-                <Button 
-                   onClick={handleUpdate} 
+                <Button
+                   onClick={handleUpdate}
                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
                    disabled={loading}
                 >

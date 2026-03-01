@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Plus, Zap, MessageSquare, AtSign, Trash2, Edit, Mail, ImageIcon } from "lucide-react";
+import { Loader2, Plus, Zap, MessageSquare, AtSign, Trash2, Edit, Mail, ImageIcon, MessageCircle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Link from "next/link";
@@ -70,6 +70,8 @@ export default function AutomationPage() {
         return <MessageSquare className="h-4 w-4 text-blue-400" />;
       case "mention":
         return <AtSign className="h-4 w-4 text-orange-400" />;
+      case "message":
+        return <MessageCircle className="h-4 w-4 text-emerald-400" />;
       default:
         return <Zap className="h-4 w-4 text-yellow-400" />;
     }

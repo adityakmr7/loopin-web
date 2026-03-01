@@ -13,6 +13,7 @@ import {
   Users,
   MessageSquare,
   CreditCard,
+  Radio,
 } from "lucide-react";
 import { useLogout } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,11 @@ const sidebarItems = [
     title: "Inbox",
     href: "/inbox",
     icon: MessageSquare,
+  },
+  {
+    title: "Broadcasts",
+    href: "/broadcasts",
+    icon: Radio,
   },
   {
     title: "Accounts",

@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateBroadcast, useSendBroadcast, useEstimatedAudience } from "@/hooks/useBroadcast";
 import api from "@/lib/api";
-import { Info, Send, Users, Loader2 } from "lucide-react";
+import { Info, Send, Clock, Users, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Account {
@@ -20,12 +21,20 @@ interface Account {
 
 const TEMPLATE_VARS = ["{{username}}", "{{name}}", "{{account}}"];
 
+// Build a datetime-local string for the min attribute (now + 5 min)
+function getMinDateTime() {
+  const d = new Date(Date.now() + 5 * 60 * 1000);
+  return d.toISOString().slice(0, 16);
+}
+
 export default function NewBroadcastPage() {
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [tagFilter, setTagFilter] = useState<string[]>([]);
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { data: accounts } = useQuery<Account[]>({
@@ -74,6 +83,16 @@ export default function NewBroadcastPage() {
       return;
     }
 
+    if (scheduleEnabled && !scheduledAt) {
+      toast.error("Please select a date and time to schedule the broadcast");
+      return;
+    }
+
+    if (scheduleEnabled && new Date(scheduledAt) <= new Date()) {
+      toast.error("Scheduled time must be in the future");
+      return;
+    }
+
     try {
       const { broadcast } = await createBroadcast.mutateAsync({
         accountId,
@@ -82,9 +101,12 @@ export default function NewBroadcastPage() {
         tagFilter,
       });
 
-      // Immediately send
-      await sendBroadcast.mutateAsync(broadcast.id);
-      toast.success("Broadcast launched!");
+      await sendBroadcast.mutateAsync({
+        broadcastId: broadcast.id,
+        scheduledAt: scheduleEnabled ? new Date(scheduledAt).toISOString() : undefined,
+      });
+
+      toast.success(scheduleEnabled ? "Broadcast scheduled!" : "Broadcast launched!");
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
       toast.error(error?.response?.data?.error ?? "Failed to send broadcast");
@@ -241,6 +263,41 @@ export default function NewBroadcastPage() {
             </div>
           )}
 
+          {/* Schedule toggle */}
+          <div className="rounded-lg border border-slate-800 bg-slate-950 overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-slate-400" />
+                <div>
+                  <Label className="text-sm font-medium">Schedule for later</Label>
+                  <p className="text-xs text-slate-500 mt-0.5">Send at a specific date and time instead of now.</p>
+                </div>
+              </div>
+              <Switch
+                checked={scheduleEnabled}
+                onCheckedChange={(c) => {
+                  setScheduleEnabled(c);
+                  if (!c) setScheduledAt("");
+                }}
+                className="data-[state=checked]:bg-indigo-600"
+              />
+            </div>
+            {scheduleEnabled && (
+              <div className="px-4 pb-4 border-t border-slate-800 pt-3">
+                <Input
+                  type="datetime-local"
+                  className="bg-slate-900 border-slate-700 text-slate-100"
+                  value={scheduledAt}
+                  min={getMinDateTime()}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                />
+                <p className="text-xs text-slate-500 mt-1.5">
+                  Times are in your local timezone. The broadcast will start automatically at the selected time.
+                </p>
+              </div>
+            )}
+          </div>
+
           <Button
             className="w-full bg-indigo-600 hover:bg-indigo-700 gap-2"
             onClick={handleSend}
@@ -248,10 +305,14 @@ export default function NewBroadcastPage() {
           >
             {isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
+            ) : scheduleEnabled ? (
+              <Clock className="h-4 w-4" />
             ) : (
               <Send className="h-4 w-4" />
             )}
-            {isSubmitting ? "Launching…" : "Send Broadcast"}
+            {isSubmitting
+              ? scheduleEnabled ? "Scheduling…" : "Launching…"
+              : scheduleEnabled ? "Schedule Broadcast" : "Send Broadcast"}
           </Button>
         </CardContent>
       </Card>

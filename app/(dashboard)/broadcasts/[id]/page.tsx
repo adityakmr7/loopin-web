@@ -4,15 +4,21 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useBroadcast, useBroadcastRecipients, useSendBroadcast } from "@/hooks/useBroadcast";
+import {
+  useBroadcast,
+  useBroadcastRecipients,
+  useSendBroadcast,
+  useCancelScheduledBroadcast,
+} from "@/hooks/useBroadcast";
 import { formatDistanceToNow, parseISO, format } from "date-fns";
-import { ChevronLeft, ChevronRight, Loader2, Send } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Loader2, Send, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import Link from "next/link";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  scheduled: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
   running: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   completed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   failed: "bg-red-500/10 text-red-400 border-red-500/20",
@@ -31,15 +37,27 @@ export default function BroadcastDetailPage() {
   const { data: broadcast, isLoading } = useBroadcast(id);
   const { data: recipientsData } = useBroadcastRecipients(id, { page, limit: 20 });
   const sendBroadcast = useSendBroadcast();
+  const cancelSchedule = useCancelScheduledBroadcast();
 
   const handleSend = async () => {
     if (!broadcast) return;
     try {
-      await sendBroadcast.mutateAsync(broadcast.id);
+      await sendBroadcast.mutateAsync({ broadcastId: broadcast.id });
       toast.success("Broadcast launched!");
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
       toast.error(error?.response?.data?.error ?? "Failed to send broadcast");
+    }
+  };
+
+  const handleCancelSchedule = async () => {
+    if (!broadcast) return;
+    if (!confirm("Cancel this scheduled broadcast? It will revert to draft.")) return;
+    try {
+      await cancelSchedule.mutateAsync(broadcast.id);
+      toast.success("Scheduled broadcast cancelled");
+    } catch {
+      toast.error("Failed to cancel scheduled broadcast");
     }
   };
 
@@ -67,8 +85,7 @@ export default function BroadcastDetailPage() {
       ? Math.round(((broadcast.sentCount + broadcast.failedCount) / broadcast.totalRecipients) * 100)
       : 0;
 
-  const pendingCount =
-    broadcast.totalRecipients - broadcast.sentCount - broadcast.failedCount;
+  const pendingCount = broadcast.totalRecipients - broadcast.sentCount - broadcast.failedCount;
 
   return (
     <div className="space-y-8">
@@ -82,36 +99,70 @@ export default function BroadcastDetailPage() {
             <h1 className="text-3xl font-bold tracking-tight">{broadcast.name}</h1>
             <span
               className={cn(
-                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
+                "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium",
                 STATUS_STYLES[broadcast.status] ?? STATUS_STYLES.draft
               )}
             >
+              {broadcast.status === "scheduled" && <Clock className="h-3 w-3" />}
               {broadcast.status}
             </span>
           </div>
           <p className="text-sm text-slate-500">
             Created {formatDistanceToNow(parseISO(broadcast.createdAt), { addSuffix: true })}
+            {broadcast.status === "scheduled" && broadcast.scheduledAt && (
+              <> · Scheduled for {format(parseISO(broadcast.scheduledAt), "MMM d, yyyy 'at' h:mm a")}</>
+            )}
             {broadcast.completedAt && (
               <> · Completed {format(parseISO(broadcast.completedAt), "MMM d, yyyy 'at' h:mm a")}</>
             )}
           </p>
         </div>
 
-        {broadcast.status === "draft" && (
-          <Button
-            className="bg-indigo-600 hover:bg-indigo-700 gap-2"
-            onClick={handleSend}
-            disabled={sendBroadcast.isPending}
-          >
-            {sendBroadcast.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-            Send Broadcast
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {broadcast.status === "scheduled" && (
+            <Button
+              variant="outline"
+              className="border-amber-600/50 text-amber-400 hover:bg-amber-600/10 gap-2"
+              onClick={handleCancelSchedule}
+              disabled={cancelSchedule.isPending}
+            >
+              {cancelSchedule.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <XCircle className="h-4 w-4" />
+              )}
+              Cancel Schedule
+            </Button>
+          )}
+
+          {broadcast.status === "draft" && (
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700 gap-2"
+              onClick={handleSend}
+              disabled={sendBroadcast.isPending}
+            >
+              {sendBroadcast.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Send Now
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Scheduled info banner */}
+      {broadcast.status === "scheduled" && broadcast.scheduledAt && (
+        <div className="flex items-center gap-3 rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-4 text-sm text-indigo-300">
+          <Clock className="h-4 w-4 shrink-0" />
+          <span>
+            This broadcast is scheduled to send on{" "}
+            <strong>{format(parseISO(broadcast.scheduledAt), "EEEE, MMMM d, yyyy 'at' h:mm a")}</strong>.
+            It will start automatically.
+          </span>
+        </div>
+      )}
 
       {/* Stats */}
       {broadcast.totalRecipients > 0 && (

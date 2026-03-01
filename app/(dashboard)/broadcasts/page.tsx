@@ -6,10 +6,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useBroadcasts, useDeleteBroadcast, type Broadcast } from "@/hooks/useBroadcast";
+import { useBroadcasts, useDeleteBroadcast, useCancelScheduledBroadcast, type Broadcast } from "@/hooks/useBroadcast";
 import api from "@/lib/api";
-import { formatDistanceToNow, parseISO } from "date-fns";
-import { Radio, Plus, Trash2, Loader2 } from "lucide-react";
+import { format, formatDistanceToNow, parseISO } from "date-fns";
+import { Radio, Plus, Trash2, Loader2, Clock, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -20,6 +20,7 @@ interface Account {
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  scheduled: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
   running: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   completed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   failed: "bg-red-500/10 text-red-400 border-red-500/20",
@@ -41,14 +42,27 @@ export default function BroadcastsPage() {
 
   const { data: broadcasts, isLoading } = useBroadcasts(accountId);
   const deleteBroadcast = useDeleteBroadcast();
+  const cancelSchedule = useCancelScheduledBroadcast();
 
-  const handleDelete = async (b: Broadcast) => {
+  const handleDelete = async (b: Broadcast, e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!confirm(`Delete broadcast "${b.name}"?`)) return;
     try {
       await deleteBroadcast.mutateAsync(b.id);
       toast.success("Broadcast deleted");
     } catch {
       toast.error("Failed to delete broadcast");
+    }
+  };
+
+  const handleCancelSchedule = async (b: Broadcast, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Cancel scheduled broadcast "${b.name}"? It will revert to draft.`)) return;
+    try {
+      await cancelSchedule.mutateAsync(b.id);
+      toast.success("Scheduled broadcast cancelled");
+    } catch {
+      toast.error("Failed to cancel scheduled broadcast");
     }
   };
 
@@ -113,7 +127,7 @@ export default function BroadcastsPage() {
               <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3 text-xs uppercase text-slate-500 border-b border-slate-800">
                 <span>Name</span>
                 <span>Status</span>
-                <span>Progress</span>
+                <span>Progress / Scheduled</span>
                 <span>Created</span>
                 <span />
               </div>
@@ -128,17 +142,25 @@ export default function BroadcastsPage() {
 
                     <span
                       className={cn(
-                        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium w-fit",
+                        "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium w-fit",
                         STATUS_STYLES[b.status] ?? STATUS_STYLES.draft
                       )}
                     >
+                      {b.status === "scheduled" && <Clock className="h-3 w-3" />}
                       {b.status}
                     </span>
 
                     <span className="text-sm text-slate-400">
-                      {b.totalRecipients > 0
-                        ? `${b.sentCount} / ${b.totalRecipients}`
-                        : "—"}
+                      {b.status === "scheduled" && b.scheduledAt ? (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-indigo-400" />
+                          {format(parseISO(b.scheduledAt), "MMM d, h:mm a")}
+                        </span>
+                      ) : b.totalRecipients > 0 ? (
+                        `${b.sentCount} / ${b.totalRecipients}`
+                      ) : (
+                        "—"
+                      )}
                     </span>
 
                     <span className="text-sm text-slate-400">
@@ -150,12 +172,19 @@ export default function BroadcastsPage() {
                         variant="ghost"
                         size="icon"
                         className="text-slate-500 hover:text-red-400 hover:bg-red-400/10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(b);
-                        }}
+                        onClick={(e) => handleDelete(b, e)}
                       >
                         <Trash2 className="h-4 w-4" />
+                      </Button>
+                    ) : b.status === "scheduled" ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-slate-500 hover:text-amber-400 hover:bg-amber-400/10"
+                        title="Cancel schedule"
+                        onClick={(e) => handleCancelSchedule(b, e)}
+                      >
+                        <XCircle className="h-4 w-4" />
                       </Button>
                     ) : (
                       <div className="w-9" />

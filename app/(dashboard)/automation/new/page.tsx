@@ -285,22 +285,6 @@ export default function NewRulePage() {
            {step === 3 && (
              <div className="space-y-6">
                 <div className="space-y-4">
-                   {/* Like toggle */}
-                   <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-4 py-3">
-                      <div>
-                         <Label className="text-sm font-medium">Like Comment</Label>
-                         <p className="text-xs text-slate-500 mt-0.5">Automatically like the comment that matched this rule.</p>
-                      </div>
-                      <Switch 
-                         checked={formData.actions.like ?? false}
-                         onCheckedChange={(c) => setFormData({
-                            ...formData, 
-                            actions: { ...formData.actions, like: c }
-                         })}
-                         className="data-[state=checked]:bg-indigo-600"
-                      />
-                   </div>
-
                    {/* Hide toggle */}
                    <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-4 py-3">
                       <div>

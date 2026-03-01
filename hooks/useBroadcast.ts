@@ -10,7 +10,8 @@ export interface Broadcast {
   name: string;
   message: string;
   tagFilter: string[];
-  status: "draft" | "running" | "completed" | "failed";
+  status: "draft" | "scheduled" | "running" | "completed" | "failed";
+  scheduledAt: string | null;
   totalRecipients: number;
   sentCount: number;
   failedCount: number;
@@ -56,7 +57,7 @@ export function useBroadcast(id: string | undefined) {
     enabled: !!id,
     refetchInterval: (query) => {
       const broadcast = query.state.data as Broadcast | undefined;
-      return broadcast?.status === "running" ? 5000 : false;
+      return broadcast?.status === "running" || broadcast?.status === "scheduled" ? 10000 : false;
     },
   });
   return query;
@@ -110,8 +111,30 @@ export function useSendBroadcast() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationFn: async ({
+      broadcastId,
+      scheduledAt,
+    }: {
+      broadcastId: string;
+      scheduledAt?: string; // ISO string or undefined for immediate send
+    }) => {
+      const body = scheduledAt ? { scheduledAt } : undefined;
+      const { data } = await api.post(`/broadcasts/${broadcastId}/send`, body ?? {});
+      return data.data as Broadcast;
+    },
+    onSuccess: (broadcast) => {
+      queryClient.invalidateQueries({ queryKey: ["broadcasts", "detail", broadcast.id] });
+      queryClient.invalidateQueries({ queryKey: ["broadcasts", broadcast.accountId] });
+    },
+  });
+}
+
+export function useCancelScheduledBroadcast() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
     mutationFn: async (broadcastId: string) => {
-      const { data } = await api.post(`/broadcasts/${broadcastId}/send`);
+      const { data } = await api.post(`/broadcasts/${broadcastId}/cancel-schedule`);
       return data.data as Broadcast;
     },
     onSuccess: (broadcast) => {

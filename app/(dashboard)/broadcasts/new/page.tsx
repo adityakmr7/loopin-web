@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -131,11 +131,11 @@ export default function NewBroadcastPage() {
         </span>
       </div>
 
-      <Card className="bg-slate-900 border-slate-800">
-        <CardHeader>
-          <CardTitle className="text-base">Broadcast details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <div className="rounded-xl border border-slate-800 bg-slate-900">
+        <div className="px-6 py-4 border-b border-slate-800">
+          <p className="text-base font-semibold text-slate-100">Broadcast details</p>
+        </div>
+        <div className="p-6 space-y-6">
           {/* Account selector */}
           {accounts && accounts.length > 1 && (
             <div className="space-y-2">
@@ -299,7 +299,7 @@ export default function NewBroadcastPage() {
           </div>
 
           <Button
-            className="w-full bg-indigo-600 hover:bg-indigo-700 gap-2"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 gap-2"
             onClick={handleSend}
             disabled={isSubmitting || !accountId || !name.trim() || !message.trim()}
           >
@@ -314,8 +314,8 @@ export default function NewBroadcastPage() {
               ? scheduleEnabled ? "Scheduling…" : "Launching…"
               : scheduleEnabled ? "Schedule Broadcast" : "Send Broadcast"}
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

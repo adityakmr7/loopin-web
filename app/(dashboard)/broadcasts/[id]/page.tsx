@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import {
   useBroadcast,
@@ -185,58 +185,46 @@ export default function BroadcastDetailPage() {
 
           {/* Stat cards */}
           <div className="grid grid-cols-3 gap-4">
-            <Card className="bg-slate-900 border-slate-800">
-              <CardContent className="p-4">
-                <p className="text-2xl font-bold text-emerald-400">{broadcast.sentCount}</p>
-                <p className="text-sm text-slate-400">Sent</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-slate-900 border-slate-800">
-              <CardContent className="p-4">
-                <p className="text-2xl font-bold text-red-400">{broadcast.failedCount}</p>
-                <p className="text-sm text-slate-400">Failed</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-slate-900 border-slate-800">
-              <CardContent className="p-4">
-                <p className="text-2xl font-bold text-slate-300">{pendingCount}</p>
-                <p className="text-sm text-slate-400">Pending</p>
-              </CardContent>
-            </Card>
+            <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+              <p className="text-2xl font-bold text-emerald-400 tabular-nums">{broadcast.sentCount}</p>
+              <p className="text-sm text-slate-400 mt-0.5">Sent</p>
+            </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+              <p className="text-2xl font-bold text-red-400 tabular-nums">{broadcast.failedCount}</p>
+              <p className="text-sm text-slate-400 mt-0.5">Failed</p>
+            </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+              <p className="text-2xl font-bold text-slate-300 tabular-nums">{pendingCount}</p>
+              <p className="text-sm text-slate-400 mt-0.5">Pending</p>
+            </div>
           </div>
         </div>
       )}
 
       {/* Message preview */}
-      <Card className="bg-slate-900 border-slate-800">
-        <CardHeader>
-          <CardTitle className="text-sm text-slate-400">Message</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-slate-200 font-mono whitespace-pre-wrap">{broadcast.message}</p>
-          {broadcast.tagFilter.length > 0 && (
-            <div className="mt-3 flex gap-2 flex-wrap">
-              <span className="text-xs text-slate-500">Tag filter:</span>
-              {broadcast.tagFilter.map((tag) => (
-                <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">Message</p>
+        <p className="text-sm text-slate-200 font-mono whitespace-pre-wrap leading-relaxed">{broadcast.message}</p>
+        {broadcast.tagFilter.length > 0 && (
+          <div className="mt-3 flex gap-2 flex-wrap items-center">
+            <span className="text-xs text-slate-500">Tag filter:</span>
+            {broadcast.tagFilter.map((tag) => (
+              <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Recipients table */}
       {recipientsData && recipientsData.data.length > 0 && (
-        <Card className="bg-slate-900 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-base">
-              Recipients{" "}
-              <span className="text-slate-500 font-normal text-sm">({recipientsData.total})</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
+        <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-800 flex items-center gap-2">
+            <p className="text-base font-semibold text-slate-100">Recipients</p>
+            <span className="text-sm text-slate-500">({recipientsData.total})</span>
+          </div>
+          <div>
             <div className="grid grid-cols-[2fr_1fr_1fr] gap-4 px-6 py-3 text-xs uppercase text-slate-500 border-b border-slate-800">
               <span>Contact</span>
               <span>Status</span>
@@ -319,8 +307,8 @@ export default function BroadcastDetailPage() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -14,7 +14,12 @@ export default function DashboardLayout({
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-950">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-white" />
+          </div>
+          <p className="text-sm text-slate-500">Loading Loopin…</p>
+        </div>
       </div>
     );
   }

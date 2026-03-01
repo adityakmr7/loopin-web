@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -108,23 +107,22 @@ export default function ContactsPage() {
       )}
 
       {/* Contact table */}
-      <Card className="bg-slate-900 border-slate-800">
-        <CardContent className="p-0">
+      <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
             </div>
           ) : !accountId ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center text-slate-500">
-              <Users className="h-10 w-10 mb-4 opacity-20" />
-              <p className="text-lg font-medium text-slate-400">No account connected</p>
-              <p className="text-sm mt-2">Connect an Instagram account first</p>
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Users className="h-10 w-10 mb-4 text-slate-700" />
+              <p className="text-base font-medium text-slate-400">No account connected</p>
+              <p className="text-sm text-slate-600 mt-1">Connect an Instagram account first</p>
             </div>
           ) : data?.data.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center text-slate-500">
-              <Users className="h-10 w-10 mb-4 opacity-20" />
-              <p className="text-lg font-medium text-slate-400">No contacts yet</p>
-              <p className="text-sm max-w-sm mt-2">Contacts are created automatically when someone comments, mentions, or DMs your account</p>
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Users className="h-10 w-10 mb-4 text-slate-700" />
+              <p className="text-base font-medium text-slate-400">No contacts yet</p>
+              <p className="text-sm text-slate-600 max-w-sm mt-1">Contacts are created automatically when someone comments, mentions, or DMs your account</p>
             </div>
           ) : (
             <>
@@ -216,8 +214,7 @@ export default function ContactsPage() {
               )}
             </>
           )}
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

@@ -18,7 +18,7 @@ import {
   MessageCirclePlus,
   Activity,
 } from "lucide-react";
-import { useLogout } from "@/hooks/use-auth";
+import { useLogout, useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { FeedbackModal } from "@/components/layout/FeedbackModal";
 
@@ -38,14 +38,21 @@ const sidebarItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const logout = useLogout();
+  const { user } = useAuth();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  const initials = user?.name
+    ? user.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "?";
 
   return (
     <>
       <div className="flex h-screen w-64 flex-col border-r border-slate-800 bg-slate-950">
-        <div className="flex h-16 items-center px-6 border-b border-slate-800">
-          <Link href="/dashboard" className="flex items-center gap-2 font-bold text-xl text-indigo-500">
-            <Zap className="h-6 w-6" />
+        <div className="flex h-16 items-center px-5 border-b border-slate-800">
+          <Link href="/dashboard" className="flex items-center gap-2.5 font-bold text-lg text-white">
+            <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
+              <Zap className="h-4 w-4 text-white" />
+            </div>
             <span>Loopin</span>
           </Link>
         </div>
@@ -70,6 +77,19 @@ export function Sidebar() {
           </nav>
 
           <div className="space-y-1">
+            {/* User identity */}
+            {user && (
+              <div className="flex items-center gap-2.5 px-3 py-2.5 mb-1 rounded-lg border border-slate-800 bg-slate-900/50">
+                <div className="h-7 w-7 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-[11px] font-bold text-indigo-400 shrink-0">
+                  {initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-slate-200 truncate">{user.name}</p>
+                  <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
+                </div>
+              </div>
+            )}
+
             <Button
               variant="ghost"
               onClick={() => setFeedbackOpen(true)}

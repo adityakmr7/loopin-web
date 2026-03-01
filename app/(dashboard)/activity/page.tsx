@@ -17,14 +17,14 @@ interface Account {
 }
 
 const TRIGGER_OPTIONS = [
-  { value: "", label: "All triggers" },
+  { value: "all", label: "All triggers" },
   { value: "comment", label: "Comment" },
   { value: "mention", label: "Mention" },
   { value: "message", label: "DM" },
 ];
 
 const ACTION_OPTIONS = [
-  { value: "", label: "All actions" },
+  { value: "all", label: "All actions" },
   { value: "reply", label: "Reply to Comment" },
   { value: "comment_to_dm", label: "Comment → DM" },
   { value: "reply_dm", label: "DM Reply" },
@@ -32,7 +32,7 @@ const ACTION_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: "", label: "All statuses" },
+  { value: "all", label: "All statuses" },
   { value: "success", label: "Success" },
   { value: "failed", label: "Failed" },
   { value: "skipped", label: "Skipped" },
@@ -83,10 +83,10 @@ function ActionLabel({ action }: { action: ActivityLog["action"] }) {
 }
 
 export default function ActivityPage() {
-  const [accountId, setAccountId] = useState("");
-  const [trigger, setTrigger] = useState("");
-  const [action, setAction] = useState("");
-  const [status, setStatus] = useState("");
+  const [accountId, setAccountId] = useState("all");
+  const [trigger, setTrigger] = useState("all");
+  const [action, setAction] = useState("all");
+  const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
 
   const { data: accounts } = useQuery<Account[]>({
@@ -98,10 +98,10 @@ export default function ActivityPage() {
   });
 
   const { data, isLoading } = useActivity({
-    accountId: accountId || undefined,
-    trigger: trigger || undefined,
-    action: action || undefined,
-    status: status || undefined,
+    accountId: accountId === "all" ? undefined : accountId,
+    trigger: trigger === "all" ? undefined : trigger,
+    action: action === "all" ? undefined : action,
+    status: status === "all" ? undefined : status,
     page,
     limit: 50,
   });
@@ -125,7 +125,7 @@ export default function ActivityPage() {
             <SelectValue placeholder="All accounts" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All accounts</SelectItem>
+            <SelectItem value="all">All accounts</SelectItem>
             {accounts?.map((acc) => (
               <SelectItem key={acc.id} value={acc.id}>@{acc.username}</SelectItem>
             ))}
@@ -165,11 +165,11 @@ export default function ActivityPage() {
           </SelectContent>
         </Select>
 
-        {(accountId || trigger || action || status) && (
+        {(accountId !== "all" || trigger !== "all" || action !== "all" || status !== "all") && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => { setAccountId(""); setTrigger(""); setAction(""); setStatus(""); resetPage(); }}
+            onClick={() => { setAccountId("all"); setTrigger("all"); setAction("all"); setStatus("all"); resetPage(); }}
             className="text-slate-400 hover:text-slate-200"
           >
             Clear filters

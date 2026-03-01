@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, ArrowLeft, Variable, ImageIcon, MessageCircle } from "lucide-react";
@@ -237,8 +237,8 @@ export default function EditRulePage() {
          </div>
       </div>
 
-      <Card className="bg-slate-900 border-slate-800">
-        <CardContent className="p-6 space-y-6">
+      <div className="rounded-xl border border-slate-800 bg-slate-900">
+        <div className="p-6 space-y-6">
 
           {step === 1 && (
              <div className="space-y-6">
@@ -480,8 +480,8 @@ export default function EditRulePage() {
              )}
           </div>
 
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

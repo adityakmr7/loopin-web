@@ -15,7 +15,6 @@ import {
   Clock,
 } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,8 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { useSettings, useUpdateSettings, type UserSettings } from "@/hooks/useSettings";
 import { useSessions, useRevokeSession, useLogoutAllSessions } from "@/hooks/useSessions";
 
@@ -61,19 +58,22 @@ function SkeletonBlock({ className = "" }: { className?: string }) {
 
 function SettingsSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {[1, 2, 3].map((i) => (
-        <Card key={i} className="bg-slate-900 border-slate-800">
-          <CardHeader>
-            <SkeletonBlock className="h-5 w-40" />
-            <SkeletonBlock className="h-3 w-64 mt-1" />
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div key={i} className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+          <div className="flex items-center gap-2 mb-5">
+            <SkeletonBlock className="h-7 w-7 rounded-lg" />
+            <div className="space-y-1.5">
+              <SkeletonBlock className="h-4 w-36" />
+              <SkeletonBlock className="h-3 w-52" />
+            </div>
+          </div>
+          <div className="space-y-4">
             <SkeletonBlock className="h-10 w-full" />
             <SkeletonBlock className="h-10 w-full" />
             <SkeletonBlock className="h-10 w-3/4" />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ))}
     </div>
   );
@@ -154,23 +154,18 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="bg-slate-900 border-slate-800">
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-indigo-600/10">
-            <Icon className="h-4 w-4 text-indigo-400" />
-          </div>
-          <div>
-            <CardTitle className="text-base font-semibold">{title}</CardTitle>
-            <CardDescription className="text-slate-500 text-xs mt-0.5">
-              {description}
-            </CardDescription>
-          </div>
+    <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-800">
+        <div className="p-1.5 rounded-lg bg-indigo-600/10 shrink-0">
+          <Icon className="h-4 w-4 text-indigo-400" />
         </div>
-      </CardHeader>
-      <Separator className="bg-slate-800" />
-      <CardContent className="pt-5">{children}</CardContent>
-    </Card>
+        <div>
+          <p className="text-base font-semibold text-slate-100">{title}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+        </div>
+      </div>
+      <div className="p-6">{children}</div>
+    </div>
   );
 }
 
@@ -300,11 +295,11 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-3xl">
       {/* Page header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-slate-400">Manage your Loopin preferences</p>
+        <p className="text-slate-400 mt-1">Manage your Loopin preferences</p>
       </div>
 
       {/* ── Section 1: Automation Safety ───────────────────────────────────── */}
@@ -409,7 +404,7 @@ export default function SettingsPage() {
             <Button
               onClick={saveAutomation}
               disabled={delayError || savingAutomation}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50"
             >
               {savingAutomation && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
@@ -491,7 +486,7 @@ export default function SettingsPage() {
             <Button
               onClick={savePreferences}
               disabled={savingPrefs}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white"
             >
               {savingPrefs && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
@@ -585,7 +580,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <Separator className="bg-slate-800 my-4" />
+          <div className="border-t border-slate-800 my-4" />
 
           <div className="flex items-center justify-between">
             <div>

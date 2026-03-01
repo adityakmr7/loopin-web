@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBroadcasts, useDeleteBroadcast, useCancelScheduledBroadcast, type Broadcast } from "@/hooks/useBroadcast";
@@ -74,7 +73,7 @@ export default function BroadcastsPage() {
           <p className="text-slate-400">Send a DM to all (or filtered) contacts at once</p>
         </div>
         <Button
-          className="bg-indigo-600 hover:bg-indigo-700 gap-2"
+          className="bg-indigo-600 hover:bg-indigo-500 gap-2 shrink-0"
           onClick={() => router.push("/broadcasts/new")}
         >
           <Plus className="h-4 w-4" />
@@ -97,25 +96,26 @@ export default function BroadcastsPage() {
         </Select>
       )}
 
-      <Card className="bg-slate-900 border-slate-800">
-        <CardContent className="p-0">
+      <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
             </div>
           ) : !accountId ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center text-slate-500">
-              <Radio className="h-10 w-10 mb-4 opacity-20" />
-              <p className="text-lg font-medium text-slate-400">No account connected</p>
-              <p className="text-sm mt-2">Connect an Instagram account first</p>
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Radio className="h-10 w-10 mb-4 text-slate-700" />
+              <p className="text-base font-medium text-slate-400">No account connected</p>
+              <p className="text-sm text-slate-600 mt-1">Connect an Instagram account first</p>
             </div>
           ) : !broadcasts || broadcasts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center text-slate-500">
-              <Radio className="h-10 w-10 mb-4 opacity-20" />
-              <p className="text-lg font-medium text-slate-400">No broadcasts yet</p>
-              <p className="text-sm mt-2">Create your first broadcast to reach all your contacts</p>
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="h-14 w-14 rounded-xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center mb-4">
+                <Radio className="h-7 w-7 text-indigo-400" />
+              </div>
+              <p className="text-base font-semibold text-slate-200 mb-1">No broadcasts yet</p>
+              <p className="text-sm text-slate-500 mb-6">Create your first broadcast to reach all your contacts at once</p>
               <Button
-                className="mt-4 bg-indigo-600 hover:bg-indigo-700 gap-2"
+                className="bg-indigo-600 hover:bg-indigo-500 gap-2"
                 onClick={() => router.push("/broadcasts/new")}
               >
                 <Plus className="h-4 w-4" />
@@ -194,8 +194,7 @@ export default function BroadcastsPage() {
               </div>
             </>
           )}
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useActivity, type ActivityLog } from "@/hooks/useActivity";
 import api from "@/lib/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, XCircle, MinusCircle, MessageSquare, AtSign, MessageCircle, Reply, Send, EyeOff, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -61,9 +60,9 @@ function StatusBadge({ status }: { status: ActivityLog["status"] }) {
 }
 
 function TriggerBadge({ trigger }: { trigger: ActivityLog["trigger"] }) {
-  if (trigger === "comment") return <Badge variant="outline" className="text-indigo-400 border-indigo-500/30 gap-1 text-xs"><MessageSquare className="h-3 w-3" />Comment</Badge>;
-  if (trigger === "mention") return <Badge variant="outline" className="text-purple-400 border-purple-500/30 gap-1 text-xs"><AtSign className="h-3 w-3" />Mention</Badge>;
-  return <Badge variant="outline" className="text-emerald-400 border-emerald-500/30 gap-1 text-xs"><MessageCircle className="h-3 w-3" />DM</Badge>;
+  if (trigger === "comment") return <span className="inline-flex items-center gap-1 rounded-full border border-indigo-500/30 px-2 py-0.5 text-xs text-indigo-400"><MessageSquare className="h-3 w-3" />Comment</span>;
+  if (trigger === "mention") return <span className="inline-flex items-center gap-1 rounded-full border border-purple-500/30 px-2 py-0.5 text-xs text-purple-400"><AtSign className="h-3 w-3" />Mention</span>;
+  return <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 px-2 py-0.5 text-xs text-emerald-400"><MessageCircle className="h-3 w-3" />DM</span>;
 }
 
 function ActionLabel({ action }: { action: ActivityLog["action"] }) {

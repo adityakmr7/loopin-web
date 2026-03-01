@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -151,13 +150,12 @@ export default function ContactDetailPage() {
       </div>
 
       {/* Tags */}
-      <Card className="bg-slate-900 border-slate-800">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-slate-400 flex items-center gap-2">
-            <Tag className="h-4 w-4" /> Tags
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-800">
+          <Tag className="h-4 w-4 text-slate-500" />
+          <p className="text-sm font-medium text-slate-400">Tags</p>
+        </div>
+        <div className="p-5 space-y-3">
           <div className="flex flex-wrap gap-2">
             {contact.tags.map((tag) => (
               <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-700 text-slate-300 text-sm">
@@ -169,7 +167,6 @@ export default function ContactDetailPage() {
             ))}
             {contact.tags.length === 0 && <span className="text-sm text-slate-500 italic">No tags yet</span>}
           </div>
-
           <div className="flex gap-2">
             <Input
               placeholder="Add tag..."
@@ -182,15 +179,15 @@ export default function ContactDetailPage() {
               <Plus className="h-4 w-4" />
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Contact details */}
-      <Card className="bg-slate-900 border-slate-800">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-slate-400">Contact Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-800">
+          <p className="text-sm font-medium text-slate-400">Contact Details</p>
+        </div>
+        <div className="p-5 space-y-4">
           <div className="space-y-1.5">
             <Label className="flex items-center gap-1.5 text-slate-400"><Mail className="h-3.5 w-3.5" /> Email</Label>
             <Input
@@ -200,7 +197,6 @@ export default function ContactDetailPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-
           <div className="space-y-1.5">
             <Label className="flex items-center gap-1.5 text-slate-400"><Phone className="h-3.5 w-3.5" /> Phone</Label>
             <Input
@@ -210,7 +206,6 @@ export default function ContactDetailPage() {
               onChange={(e) => setPhone(e.target.value)}
             />
           </div>
-
           <div className="space-y-1.5">
             <Label className="text-slate-400">Notes</Label>
             <textarea
@@ -220,24 +215,23 @@ export default function ContactDetailPage() {
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
-
           <Button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white w-full"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white w-full"
             onClick={handleSave}
             disabled={updateContact.isPending}
           >
             {updateContact.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Changes
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Interaction timeline */}
-      <Card className="bg-slate-900 border-slate-800">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-slate-400">Interaction History</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-800">
+          <p className="text-sm font-medium text-slate-400">Interaction History</p>
+        </div>
+        <div className="p-5">
           {!interactions || interactions.length === 0 ? (
             <p className="text-sm text-slate-500 italic">No interactions recorded yet</p>
           ) : (
@@ -249,9 +243,7 @@ export default function ContactDetailPage() {
                     {item.type}
                   </span>
                   <div className="min-w-0">
-                    {item.text && (
-                      <p className="text-sm text-slate-300 truncate">{item.text}</p>
-                    )}
+                    {item.text && <p className="text-sm text-slate-300 truncate">{item.text}</p>}
                     <p className="text-xs text-slate-500">
                       {format(parseISO(item.occurredAt), "MMM d, yyyy 'at' h:mm a")}
                     </p>
@@ -260,8 +252,8 @@ export default function ContactDetailPage() {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

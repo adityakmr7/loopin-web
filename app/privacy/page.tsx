@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 
 export default function PrivacyPolicyPage() {
@@ -14,16 +13,14 @@ export default function PrivacyPolicyPage() {
           Back to Home
         </Link>
 
-        <Card className="border-slate-800 bg-slate-900 text-slate-50">
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold tracking-tight">
-              Privacy Policy
-            </CardTitle>
-            <p className="text-slate-400 text-sm">
+        <div className="rounded-xl border border-slate-800 bg-slate-900 text-slate-50 p-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight">Privacy Policy</h1>
+            <p className="text-slate-400 text-sm mt-1">
               Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
-          </CardHeader>
-          <CardContent className="prose prose-invert prose-slate max-w-none">
+          </div>
+          <div className="prose prose-invert prose-slate max-w-none">
             <div className="space-y-6 text-slate-300">
               <section>
                 <h2 className="text-xl font-semibold text-slate-50 mb-3">1. Introduction</h2>
@@ -133,8 +130,8 @@ export default function PrivacyPolicyPage() {
                 </div>
               </section>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

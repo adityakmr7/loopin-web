@@ -548,12 +548,9 @@ export default function SettingsPage() {
                               : format(parseISO(session.expiresAt), "MMM d, yyyy")}
                           </span>
                           {isExpired && (
-                            <Badge
-                              variant="outline"
-                              className="border-red-800 text-red-400 text-[10px] py-0"
-                            >
+                            <span className="inline-flex items-center rounded-full border border-red-800 px-1.5 py-0 text-[10px] text-red-400">
                               Expired
-                            </Badge>
+                            </span>
                           )}
                         </div>
                       </div>

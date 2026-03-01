@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Plus, Zap, MessageSquare, AtSign, Trash2, Edit, Mail } from "lucide-react";
+import { Loader2, Plus, Zap, MessageSquare, AtSign, Trash2, Edit, Mail, ImageIcon } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Link from "next/link";
@@ -16,6 +16,7 @@ interface AutomationRule {
   name: string;
   description: string | null;
   trigger: "comment" | "mention" | "message";
+  postFilter: string[];
   isActive: boolean;
   triggerCount: number;
   dmCount?: number;
@@ -108,6 +109,19 @@ export default function AutomationPage() {
                         <Badge variant="outline" className="ml-2 border-slate-700 text-slate-400">
                           @{rule.account.username}
                         </Badge>
+                        {rule.trigger === "comment" && (
+                          <Badge
+                            variant="outline"
+                            className={rule.postFilter?.length > 0
+                              ? "border-sky-700 text-sky-400"
+                              : "border-slate-700 text-slate-500"}
+                          >
+                            <ImageIcon className="h-3 w-3 mr-1" />
+                            {rule.postFilter?.length > 0
+                              ? `${rule.postFilter.length} post${rule.postFilter.length > 1 ? "s" : ""}`
+                              : "All posts"}
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-sm text-slate-400 pl-11">{rule.description || "No description"}</p>
                    </div>

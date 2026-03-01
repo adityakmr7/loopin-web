@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, Variable } from "lucide-react";
+import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, Variable, ImageIcon } from "lucide-react";
+import { PostFilterPicker } from "@/components/automation/PostFilterPicker";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
@@ -65,6 +66,7 @@ interface CreateRuleData {
   description: string;
   accountId: string;
   trigger: string;
+  postFilter: string[];
   conditions: {
     text_contains: string[];
   };
@@ -86,6 +88,7 @@ export default function NewRulePage() {
     description: "",
     accountId: "",
     trigger: "comment",
+    postFilter: [],
     conditions: {
       text_contains: []
     },
@@ -249,12 +252,12 @@ export default function NewRulePage() {
                    <p className="text-xs text-slate-400 mb-4">
                       Define keywords that must be present in the comment for this rule to trigger.
                    </p>
-                   
+
                    <div className="space-y-2">
                       <Label className="text-xs uppercase text-slate-500">Keywords (Exact or partial match)</Label>
                       <div className="flex gap-2">
-                         <Input 
-                            placeholder="Type keyword & press Enter" 
+                         <Input
+                            placeholder="Type keyword & press Enter"
                             className="bg-slate-900 border-slate-700"
                             value={inputKeyword}
                             onChange={(e) => setInputKeyword(e.target.value)}
@@ -262,13 +265,13 @@ export default function NewRulePage() {
                          />
                          <Button variant="secondary" onClick={addKeyword}><Plus className="h-4 w-4" /></Button>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-2 mt-3">
                          {keywords.map((kw, i) => (
                             <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-sm">
                                {kw}
-                               <X 
-                                 className="h-3 w-3 cursor-pointer hover:text-indigo-300" 
+                               <X
+                                 className="h-3 w-3 cursor-pointer hover:text-indigo-300"
                                  onClick={() => setKeywords(keywords.filter((_, idx) => idx !== i))}
                                />
                             </span>
@@ -279,6 +282,23 @@ export default function NewRulePage() {
                       </div>
                    </div>
                 </div>
+
+                {formData.trigger === "comment" && formData.accountId && (
+                   <div className="bg-slate-950 border border-slate-800 rounded-lg p-4">
+                      <h3 className="text-sm font-medium mb-1 flex items-center gap-2">
+                         <ImageIcon className="h-4 w-4 text-sky-400" />
+                         Post filter (optional)
+                      </h3>
+                      <p className="text-xs text-slate-400 mb-4">
+                         Select specific posts to target. Leave empty to run on all posts.
+                      </p>
+                      <PostFilterPicker
+                         accountId={formData.accountId}
+                         selectedPostIds={formData.postFilter}
+                         onChange={(ids) => setFormData({ ...formData, postFilter: ids })}
+                      />
+                   </div>
+                )}
              </div>
           )}
 

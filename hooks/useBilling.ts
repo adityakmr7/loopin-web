@@ -39,8 +39,8 @@ export function useCreateCheckout() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (planId: string) => {
-      const { data } = await api.post("/billing/checkout", { planId });
+    mutationFn: async (planName: "pro" | "agency") => {
+      const { data } = await api.post("/billing/checkout", { planName });
       return data.data as { subscriptionId: string; keyId: string };
     },
     onSuccess: ({ subscriptionId, keyId }) => {

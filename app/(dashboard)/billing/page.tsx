@@ -18,7 +18,6 @@ const PLANS = [
     accentTo: "to-slate-600",
     iconColor: "text-slate-400",
     iconBg: "bg-slate-500/10",
-    planId: null,
     features: [
       "1 Instagram account",
       "3 automation rules",
@@ -36,7 +35,6 @@ const PLANS = [
     accentTo: "to-violet-500",
     iconColor: "text-indigo-400",
     iconBg: "bg-indigo-500/10",
-    planId: process.env.NEXT_PUBLIC_RAZORPAY_PRO_PLAN_ID ?? "",
     highlight: true,
     features: [
       "5 Instagram accounts",
@@ -57,7 +55,6 @@ const PLANS = [
     accentTo: "to-pink-500",
     iconColor: "text-purple-400",
     iconBg: "bg-purple-500/10",
-    planId: process.env.NEXT_PUBLIC_RAZORPAY_AGENCY_PLAN_ID ?? "",
     features: [
       "Unlimited accounts",
       "Unlimited rules",
@@ -260,8 +257,8 @@ export default function BillingPage() {
                           ? "bg-indigo-600 hover:bg-indigo-500 text-white"
                           : "bg-purple-600 hover:bg-purple-500 text-white"
                       )}
-                      onClick={() => plan.planId && createCheckout.mutate(plan.planId)}
-                      disabled={createCheckout.isPending || !plan.planId}
+                      onClick={() => createCheckout.mutate(plan.name as "pro" | "agency")}
+                      disabled={createCheckout.isPending}
                     >
                       {createCheckout.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

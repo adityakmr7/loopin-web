@@ -76,8 +76,9 @@ export function useCreateCheckout() {
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
     },
-    onError: () => {
-      toast.error("Failed to initiate checkout");
+    onError: (error: any) => {
+      const msg = error?.response?.data?.error ?? "Please check your plan configuration and try again.";
+      toast.error("Failed to initiate checkout", { description: msg });
     },
   });
 }

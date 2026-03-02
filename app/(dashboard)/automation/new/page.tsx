@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, Variable, ImageIcon, MessageCircle } from "lucide-react";
+import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, Variable, ImageIcon, MessageCircle, Sparkles, PenLine } from "lucide-react";
 import { PostFilterPicker } from "@/components/automation/PostFilterPicker";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { AUTOMATION_TEMPLATES, type AutomationTemplate } from "@/data/automation-templates";
 
 const TEMPLATE_VARS = [
   { label: "{{name}}", title: "Commenter's display name" },
@@ -22,6 +23,18 @@ const TEMPLATE_VARS = [
   { label: "{{keyword}}", title: "The keyword that triggered this rule" },
   { label: "{{account}}", title: "Your connected account's @handle" },
 ];
+
+const CATEGORY_STYLES: Record<string, string> = {
+  lead_gen: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  engagement: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  support: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  lead_gen: "Lead Gen",
+  engagement: "Engagement",
+  support: "Support",
+};
 
 function VariablePicker({ onInsert }: { onInsert: (v: string) => void }) {
   return (
@@ -79,27 +92,22 @@ interface CreateRuleData {
   };
 }
 
+const DEFAULT_FORM: CreateRuleData = {
+  name: "",
+  description: "",
+  accountId: "",
+  trigger: "comment",
+  postFilter: [],
+  conditions: { text_contains: [] },
+  actions: { reply: "", like: true, hide: false, comment_to_dm: undefined },
+};
+
 export default function NewRulePage() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  
-  const [formData, setFormData] = useState<CreateRuleData>({
-    name: "",
-    description: "",
-    accountId: "",
-    trigger: "comment",
-    postFilter: [],
-    conditions: {
-      text_contains: []
-    },
-    actions: {
-      reply: "",
-      like: true,
-      hide: false,
-      comment_to_dm: undefined,
-    }
-  });
+
+  const [formData, setFormData] = useState<CreateRuleData>(DEFAULT_FORM);
 
   // Separate toggle state so comment_to_dm / reply_dm is omitted when disabled
   const [dmEnabled, setDmEnabled] = useState(false);
@@ -130,6 +138,30 @@ export default function NewRulePage() {
       setLoading(false);
     }
   });
+
+  const applyTemplate = (template: AutomationTemplate | null) => {
+    if (template) {
+      setFormData({
+        ...DEFAULT_FORM,
+        trigger: template.trigger,
+        conditions: template.conditions,
+        actions: {
+          reply: template.actions.reply ?? "",
+          like: template.actions.like ?? true,
+          hide: template.actions.hide ?? false,
+          comment_to_dm: template.actions.comment_to_dm,
+          reply_dm: template.actions.reply_dm,
+        },
+      });
+      setKeywords(template.conditions.text_contains);
+      setDmEnabled(!!(template.actions.comment_to_dm || template.actions.reply_dm));
+    } else {
+      setFormData(DEFAULT_FORM);
+      setKeywords([]);
+      setDmEnabled(false);
+    }
+    setStep(1);
+  };
 
   const handleCreate = () => {
     if (!formData.name || !formData.accountId) {
@@ -176,42 +208,110 @@ export default function NewRulePage() {
         <p className="text-slate-400">Setup your automation logic</p>
       </div>
 
-      {/* Progress Steps */}
-      <div className="flex items-center gap-4 text-sm font-medium">
-         <div className={cn("flex items-center gap-2", step >= 1 ? "text-indigo-400" : "text-slate-500")}>
-            <div className={cn("h-6 w-6 rounded-full flex items-center justify-center border", step >= 1 ? "bg-indigo-500/10 border-indigo-500/50" : "border-slate-700")}>1</div>
-            Trigger
-         </div>
-         <div className="h-px w-8 bg-slate-800" />
-         <div className={cn("flex items-center gap-2", step >= 2 ? "text-indigo-400" : "text-slate-500")}>
-            <div className={cn("h-6 w-6 rounded-full flex items-center justify-center border", step >= 2 ? "bg-indigo-500/10 border-indigo-500/50" : "border-slate-700")}>2</div>
-            Conditions
-         </div>
-         <div className="h-px w-8 bg-slate-800" />
-         <div className={cn("flex items-center gap-2", step >= 3 ? "text-indigo-400" : "text-slate-500")}>
-            <div className={cn("h-6 w-6 rounded-full flex items-center justify-center border", step >= 3 ? "bg-indigo-500/10 border-indigo-500/50" : "border-slate-700")}>3</div>
-            Actions
-         </div>
-      </div>
+      {/* Progress Steps — only shown after template selection */}
+      {step > 0 && (
+        <div className="flex items-center gap-4 text-sm font-medium">
+           <div className={cn("flex items-center gap-2", step >= 1 ? "text-indigo-400" : "text-slate-500")}>
+              <div className={cn("h-6 w-6 rounded-full flex items-center justify-center border", step >= 1 ? "bg-indigo-500/10 border-indigo-500/50" : "border-slate-700")}>1</div>
+              Trigger
+           </div>
+           <div className="h-px w-8 bg-slate-800" />
+           <div className={cn("flex items-center gap-2", step >= 2 ? "text-indigo-400" : "text-slate-500")}>
+              <div className={cn("h-6 w-6 rounded-full flex items-center justify-center border", step >= 2 ? "bg-indigo-500/10 border-indigo-500/50" : "border-slate-700")}>2</div>
+              Conditions
+           </div>
+           <div className="h-px w-8 bg-slate-800" />
+           <div className={cn("flex items-center gap-2", step >= 3 ? "text-indigo-400" : "text-slate-500")}>
+              <div className={cn("h-6 w-6 rounded-full flex items-center justify-center border", step >= 3 ? "bg-indigo-500/10 border-indigo-500/50" : "border-slate-700")}>3</div>
+              Actions
+           </div>
+        </div>
+      )}
 
       <div className="rounded-xl border border-slate-800 bg-slate-900">
         <div className="p-6 space-y-6">
-          
+
+          {/* Step 0 — Template Picker */}
+          {step === 0 && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-base font-semibold text-slate-100">Choose a template</h2>
+                <p className="text-sm text-slate-400 mt-0.5">Start from a pre-built template or create your own from scratch</p>
+              </div>
+
+              {/* Start from scratch */}
+              <div
+                className="cursor-pointer rounded-xl border-2 border-dashed border-slate-700 p-4 flex items-center gap-4 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all group"
+                onClick={() => applyTemplate(null)}
+              >
+                <div className="h-10 w-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 group-hover:border-indigo-500/30">
+                  <PenLine className="h-5 w-5 text-slate-400 group-hover:text-indigo-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm text-slate-200">Start from scratch</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Build your own automation from the ground up</p>
+                </div>
+              </div>
+
+              {/* Template grid */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="h-4 w-4 text-indigo-400" />
+                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">Templates</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {AUTOMATION_TEMPLATES.map((template) => (
+                    <div
+                      key={template.id}
+                      className="cursor-pointer rounded-xl border border-slate-800 bg-slate-950 p-4 hover:border-indigo-500/40 hover:bg-slate-900 transition-all group"
+                      onClick={() => applyTemplate(template)}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <p className="font-medium text-sm text-slate-200 group-hover:text-indigo-300 transition-colors">{template.name}</p>
+                        <span className={cn("shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded border", CATEGORY_STYLES[template.category])}>
+                          {CATEGORY_LABELS[template.category]}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 leading-relaxed">{template.description}</p>
+                      <div className="mt-3 flex items-center gap-1.5">
+                        {template.trigger === "comment" && (
+                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                            <MessageSquare className="h-2.5 w-2.5" /> Comment
+                          </span>
+                        )}
+                        {template.trigger === "mention" && (
+                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                            <AtSign className="h-2.5 w-2.5" /> Mention
+                          </span>
+                        )}
+                        {template.trigger === "message" && (
+                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                            <MessageCircle className="h-2.5 w-2.5" /> DM
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {step === 1 && (
              <div className="space-y-6">
                 <div className="space-y-2">
                    <Label>Rule Name</Label>
-                   <Input 
-                      placeholder="e.g. Pricing Auto-Reply" 
+                   <Input
+                      placeholder="e.g. Pricing Auto-Reply"
                       className="bg-slate-950 border-slate-800"
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
                    />
                 </div>
-                
+
                 <div className="space-y-2">
                    <Label>Select Account</Label>
-                   <Select 
+                   <Select
                       onValueChange={(val) => setFormData({...formData, accountId: val})}
                       value={formData.accountId}
                    >
@@ -422,30 +522,31 @@ export default function NewRulePage() {
              </div>
            )}
 
-          <div className="flex justify-between pt-6 border-t border-slate-800">
-             <Button 
-                variant="ghost" 
-                onClick={() => setStep(s => Math.max(1, s - 1))}
-                disabled={step === 1}
-             >
-                Back
-             </Button>
-             
-             {step < 3 ? (
-                <Button onClick={() => setStep(s => Math.min(3, s + 1))}>
-                   Next <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-             ) : (
-                <Button 
-                   onClick={handleCreate} 
-                   className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                   disabled={loading}
-                >
-                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                   Create Rule
-                </Button>
-             )}
-          </div>
+          {step > 0 && (
+            <div className="flex justify-between pt-6 border-t border-slate-800">
+               <Button
+                  variant="ghost"
+                  onClick={() => setStep(s => Math.max(0, s - 1))}
+               >
+                  Back
+               </Button>
+
+               {step < 3 ? (
+                  <Button onClick={() => setStep(s => Math.min(3, s + 1))}>
+                     Next <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+               ) : (
+                  <Button
+                     onClick={handleCreate}
+                     className="bg-indigo-600 hover:bg-indigo-500 text-white"
+                     disabled={loading}
+                  >
+                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                     Create Rule
+                  </Button>
+               )}
+            </div>
+          )}
 
         </div>
       </div>

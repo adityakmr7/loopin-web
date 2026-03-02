@@ -17,6 +17,7 @@ import {
   Radio,
   MessageCirclePlus,
   Activity,
+  GitBranch,
 } from "lucide-react";
 import { useLogout, useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ const sidebarItems = [
   { title: "Overview",   href: "/dashboard",  icon: LayoutDashboard },
   { title: "Analytics",  href: "/analytics",  icon: BarChart2 },
   { title: "Automation", href: "/automation", icon: Zap },
+  { title: "Sequences",  href: "/sequences",  icon: GitBranch },
   { title: "Activity",   href: "/activity",   icon: Activity },
   { title: "Contacts",   href: "/contacts",   icon: Users },
   { title: "Inbox",      href: "/inbox",      icon: MessageSquare },

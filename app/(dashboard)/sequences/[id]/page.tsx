@@ -41,12 +41,12 @@ const STATUS_STYLES: Record<string, string> = {
 export default function SequenceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [enrollmentStatusFilter, setEnrollmentStatusFilter] = useState("");
+  const [enrollmentStatusFilter, setEnrollmentStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
 
   const { data: sequence, isLoading } = useSequence(id);
   const { data: enrollmentsData } = useSequenceEnrollments(id, {
-    status: enrollmentStatusFilter || undefined,
+    status: enrollmentStatusFilter === "all" ? undefined : enrollmentStatusFilter,
     page,
     limit: 20,
   });
@@ -179,10 +179,10 @@ export default function SequenceDetailPage() {
             </div>
             <Select value={enrollmentStatusFilter} onValueChange={(v) => { setEnrollmentStatusFilter(v); setPage(1); }}>
               <SelectTrigger className="h-7 w-32 text-xs bg-slate-950 border-slate-700">
-                <SelectValue placeholder="All statuses" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="stopped">Stopped</SelectItem>

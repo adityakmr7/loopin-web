@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, Variable, ImageIcon, MessageCircle, Sparkles, PenLine } from "lucide-react";
+import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, Variable, ImageIcon, MessageCircle, Sparkles, PenLine, BookOpen } from "lucide-react";
 import { PostFilterPicker } from "@/components/automation/PostFilterPicker";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
@@ -171,7 +171,7 @@ export default function NewRulePage() {
 
     // Build clean actions based on trigger type
     const actions: CreateRuleData["actions"] = {};
-    if (formData.trigger === "message") {
+    if (formData.trigger === "message" || formData.trigger === "story_reply") {
       if (dmEnabled && formData.actions.reply_dm?.trim()) {
         actions.reply_dm = formData.actions.reply_dm.trim();
       }
@@ -289,6 +289,11 @@ export default function NewRulePage() {
                             <MessageCircle className="h-2.5 w-2.5" /> DM
                           </span>
                         )}
+                        {template.trigger === "story_reply" && (
+                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                            <BookOpen className="h-2.5 w-2.5" /> Story Reply
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -328,7 +333,7 @@ export default function NewRulePage() {
 
                 <div className="space-y-3">
                    <Label>Trigger Event</Label>
-                   <div className="grid grid-cols-3 gap-3">
+                   <div className="grid grid-cols-2 gap-3">
                       <div
                         className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", formData.trigger === "comment" ? "bg-indigo-900/20 border-indigo-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
                         onClick={() => { setFormData({...formData, trigger: "comment", postFilter: []}); setDmEnabled(false); }}
@@ -349,6 +354,13 @@ export default function NewRulePage() {
                       >
                          <MessageCircle className={cn("h-5 w-5", formData.trigger === "message" ? "text-emerald-400" : "text-slate-500")} />
                          <span className="font-medium text-sm">DM Received</span>
+                      </div>
+                      <div
+                        className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", formData.trigger === "story_reply" ? "bg-amber-900/20 border-amber-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
+                        onClick={() => { setFormData({...formData, trigger: "story_reply", postFilter: []}); setDmEnabled(true); }}
+                      >
+                         <BookOpen className={cn("h-5 w-5", formData.trigger === "story_reply" ? "text-amber-400" : "text-slate-500")} />
+                         <span className="font-medium text-sm">Story Reply</span>
                       </div>
                    </div>
                 </div>
@@ -419,12 +431,18 @@ export default function NewRulePage() {
 
            {step === 3 && (
              <div className="space-y-6">
-                {formData.trigger === "message" ? (
-                  /* DM trigger: only reply_dm action */
+                {(formData.trigger === "message" || formData.trigger === "story_reply") ? (
+                  /* DM/story_reply trigger: only reply_dm action */
                   <div className="space-y-4">
-                    <div className="rounded-lg border border-emerald-800/50 bg-emerald-950/20 px-4 py-3 text-sm text-emerald-300">
-                      <strong>DM Keyword Automation</strong> — When someone sends you a DM containing the keywords you defined, Loopin will automatically reply.
-                    </div>
+                    {formData.trigger === "message" ? (
+                      <div className="rounded-lg border border-emerald-800/50 bg-emerald-950/20 px-4 py-3 text-sm text-emerald-300">
+                        <strong>DM Keyword Automation</strong> — When someone sends you a DM containing the keywords you defined, Loopin will automatically reply.
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-amber-800/50 bg-amber-950/20 px-4 py-3 text-sm text-amber-300">
+                        <strong>Story Reply Automation</strong> — When someone replies to your Instagram story containing the keywords you defined, Loopin will automatically send them a DM.
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <Label>Auto-reply DM message</Label>
                       <p className="text-xs text-slate-500">This message will be sent as a DM reply when triggered.</p>

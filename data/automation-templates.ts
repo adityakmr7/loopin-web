@@ -3,7 +3,7 @@ export interface AutomationTemplate {
   name: string;
   description: string;
   category: "lead_gen" | "engagement" | "support";
-  trigger: "comment" | "mention" | "message";
+  trigger: "comment" | "mention" | "message" | "story_reply";
   conditions: {
     text_contains: string[];
   };
@@ -71,6 +71,17 @@ export const AUTOMATION_TEMPLATES: AutomationTemplate[] = [
     conditions: { text_contains: ["hours", "open", "available"] },
     actions: {
       reply_dm: "Hi {{name}}! We're open Mon–Fri 9am–6pm. Anything else I can help with?",
+    },
+  },
+  {
+    id: "story-reply-lead",
+    name: "Story Reply Lead Magnet",
+    description: "Auto-DM a resource when someone replies to your story asking for it",
+    category: "lead_gen",
+    trigger: "story_reply",
+    conditions: { text_contains: ["send", "link", "want", "info"] },
+    actions: {
+      reply_dm: "Hey {{name}}! Thanks for watching 👋 Here's the link you asked for 🔗 [link]",
     },
   },
 ];

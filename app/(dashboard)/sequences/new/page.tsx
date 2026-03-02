@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { MessageSquare, AtSign, MessageCircle, ChevronRight, Loader2, Plus, X, Variable, Trash2 } from "lucide-react";
+import { MessageSquare, AtSign, MessageCircle, ChevronRight, Loader2, Plus, X, Variable, Trash2, BookOpen } from "lucide-react";
 import api from "@/lib/api";
 import { useCreateSequence } from "@/hooks/useSequence";
 import { toast } from "sonner";
@@ -64,7 +64,7 @@ export default function NewSequencePage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [accountId, setAccountId] = useState("");
-  const [trigger, setTrigger] = useState<"comment" | "mention" | "message">("comment");
+  const [trigger, setTrigger] = useState<"comment" | "mention" | "message" | "story_reply">("comment");
 
   const [keywords, setKeywords] = useState<string[]>([]);
   const [inputKeyword, setInputKeyword] = useState("");
@@ -218,7 +218,7 @@ export default function NewSequencePage() {
 
               <div className="space-y-3">
                 <Label>Trigger</Label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div
                     className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", trigger === "comment" ? "bg-indigo-900/20 border-indigo-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
                     onClick={() => setTrigger("comment")}
@@ -239,6 +239,13 @@ export default function NewSequencePage() {
                   >
                     <MessageCircle className={cn("h-5 w-5", trigger === "message" ? "text-emerald-400" : "text-slate-500")} />
                     <span className="font-medium text-sm">DM</span>
+                  </div>
+                  <div
+                    className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", trigger === "story_reply" ? "bg-amber-900/20 border-amber-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
+                    onClick={() => setTrigger("story_reply")}
+                  >
+                    <BookOpen className={cn("h-5 w-5", trigger === "story_reply" ? "text-amber-400" : "text-slate-500")} />
+                    <span className="font-medium text-sm">Story Reply</span>
                   </div>
                 </div>
               </div>

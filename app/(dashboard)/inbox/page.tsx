@@ -40,6 +40,11 @@ export default function InboxPage() {
 
   const activeConversation = conversations?.find((c) => c.id === activeConversationId);
 
+  // Clear reply when switching conversations
+  useEffect(() => {
+    setReplyText("");
+  }, [activeConversationId]);
+
   // Auto-scroll messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -261,7 +266,7 @@ export default function InboxPage() {
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                 />
                 <Button
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0"
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white shrink-0"
                   onClick={handleSend}
                   disabled={!replyText.trim() || sendReply.isPending}
                 >

@@ -9,6 +9,7 @@ import { Users2, UserPlus, Copy, Trash2, Loader2, Clock, Crown, Eye, Shield } fr
 import { useTeam, useInviteMember, useRemoveMember } from "@/hooks/useTeam";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { FeatureGate } from "@/components/ui/feature-gate";
 
 function RoleBadge({ role }: { role: string }) {
   return (
@@ -55,6 +56,7 @@ export default function TeamPage() {
   }
 
   return (
+    <FeatureGate plan="agency" mode="page" label="Team">
     <div className="space-y-8 max-w-3xl">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Team</h1>
@@ -215,5 +217,6 @@ export default function TeamPage() {
         </div>
       )}
     </div>
+    </FeatureGate>
   );
 }

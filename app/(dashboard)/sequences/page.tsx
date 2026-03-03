@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { GitBranch, Plus, Trash2, Loader2, MessageSquare, AtSign, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { FeatureGate } from "@/components/ui/feature-gate";
 
 interface Account {
   id: string;
@@ -70,6 +71,7 @@ export default function SequencesPage() {
   };
 
   return (
+    <FeatureGate plan="pro" mode="page" label="Sequences">
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
@@ -197,5 +199,6 @@ export default function SequencesPage() {
         </div>
       )}
     </div>
+    </FeatureGate>
   );
 }

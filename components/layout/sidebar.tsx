@@ -22,25 +22,32 @@ import {
   Webhook,
   ChevronDown,
   Check,
+  Lock,
 } from "lucide-react";
 import { useLogout, useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { FeedbackModal } from "@/components/layout/FeedbackModal";
 import { useMyWorkspaceMemberships, useSwitchWorkspace } from "@/hooks/useTeam";
+import { useFeatureAccess, type PlanName } from "@/hooks/useFeatureAccess";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-const sidebarItems = [
+const sidebarItems: {
+  title: string;
+  href: string;
+  icon: React.ElementType;
+  requiredPlan?: PlanName;
+}[] = [
   { title: "Overview",   href: "/dashboard",  icon: LayoutDashboard },
   { title: "Analytics",  href: "/analytics",  icon: BarChart2 },
   { title: "Automation", href: "/automation", icon: Zap },
-  { title: "Sequences",  href: "/sequences",  icon: GitBranch },
+  { title: "Sequences",  href: "/sequences",  icon: GitBranch,      requiredPlan: "pro" },
   { title: "Activity",   href: "/activity",   icon: Activity },
   { title: "Contacts",   href: "/contacts",   icon: Users },
   { title: "Inbox",      href: "/inbox",      icon: MessageSquare },
-  { title: "Broadcasts", href: "/broadcasts", icon: Radio },
-  { title: "Team",       href: "/team",       icon: Users2 },
-  { title: "Webhooks",   href: "/webhooks",   icon: Webhook },
+  { title: "Broadcasts", href: "/broadcasts", icon: Radio,          requiredPlan: "pro" },
+  { title: "Team",       href: "/team",       icon: Users2,         requiredPlan: "agency" },
+  { title: "Webhooks",   href: "/webhooks",   icon: Webhook,        requiredPlan: "pro" },
   { title: "Accounts",   href: "/accounts",   icon: Instagram },
   { title: "Billing",    href: "/billing",    icon: CreditCard },
   { title: "Settings",   href: "/settings",   icon: Settings },
@@ -55,6 +62,7 @@ export function Sidebar() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [workspaceSwitcherOpen, setWorkspaceSwitcherOpen] = useState(false);
 
+  const { canAccess } = useFeatureAccess();
   const { data: memberships = [] } = useMyWorkspaceMemberships();
   const switchWorkspaceMutation = useSwitchWorkspace();
 
@@ -95,21 +103,45 @@ export function Sidebar() {
 
         <div className="flex-1 flex flex-col justify-between p-4">
           <nav className="space-y-2">
-            {sidebarItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  pathname === item.href || pathname.startsWith(`${item.href}/`)
-                    ? "bg-indigo-600/10 text-indigo-400"
-                    : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
-                )}
-              >
-                <item.icon className="h-5 w-5" />
-                {item.title}
-              </Link>
-            ))}
+            {sidebarItems.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const locked = item.requiredPlan ? !canAccess(item.requiredPlan) : false;
+
+              if (locked) {
+                return (
+                  <button
+                    key={item.href}
+                    onClick={() =>
+                      toast.info(
+                        `Upgrade to ${item.requiredPlan === "agency" ? "Agency" : "Pro"} to unlock ${item.title}`,
+                        { action: { label: "Upgrade", onClick: () => router.push("/billing") } }
+                      )
+                    }
+                    className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 cursor-pointer hover:bg-slate-900 hover:text-slate-500 transition-colors"
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span className="flex-1 text-left">{item.title}</span>
+                    <Lock className="h-3.5 w-3.5 shrink-0" />
+                  </button>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-indigo-600/10 text-indigo-400"
+                      : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.title}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="space-y-1">

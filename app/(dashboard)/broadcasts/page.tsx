@@ -11,6 +11,7 @@ import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { Radio, Plus, Trash2, Loader2, Clock, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { FeatureGate } from "@/components/ui/feature-gate";
 
 interface Account {
   id: string;
@@ -66,6 +67,7 @@ export default function BroadcastsPage() {
   };
 
   return (
+    <FeatureGate plan="pro" mode="page" label="Broadcasts">
     <div className="space-y-8">
       <div className="flex items-start justify-between">
         <div>
@@ -196,5 +198,6 @@ export default function BroadcastsPage() {
           )}
       </div>
     </div>
+    </FeatureGate>
   );
 }

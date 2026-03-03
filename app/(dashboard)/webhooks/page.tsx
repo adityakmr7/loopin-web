@@ -16,6 +16,7 @@ import {
   type OutboundWebhook,
 } from "@/hooks/useWebhooks";
 import { cn } from "@/lib/utils";
+import { FeatureGate } from "@/components/ui/feature-gate";
 
 const ALL_EVENTS: { value: WebhookEventType; label: string; description: string }[] = [
   { value: "rule_matched", label: "Rule Matched", description: "Fires when an automation rule executes" },
@@ -215,6 +216,7 @@ export default function WebhooksPage() {
   };
 
   return (
+    <FeatureGate plan="pro" mode="page" label="Webhooks">
     <div className="space-y-8 max-w-3xl">
       <div className="flex items-center justify-between">
         <div>
@@ -302,5 +304,6 @@ export default function WebhooksPage() {
         </p>
       </div>
     </div>
+    </FeatureGate>
   );
 }

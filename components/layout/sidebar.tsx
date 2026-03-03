@@ -12,14 +12,10 @@ import {
   LogOut,
   Instagram,
   Users,
-  Users2,
   MessageSquare,
   CreditCard,
   Radio,
   MessageCirclePlus,
-  Activity,
-  GitBranch,
-  Webhook,
   ChevronDown,
   Check,
   Lock,
@@ -37,20 +33,17 @@ const sidebarItems: {
   href: string;
   icon: React.ElementType;
   requiredPlan?: PlanName;
+  dividerBefore?: boolean;
 }[] = [
-  { title: "Overview",   href: "/dashboard",  icon: LayoutDashboard },
-  { title: "Analytics",  href: "/analytics",  icon: BarChart2 },
-  { title: "Automation", href: "/automation", icon: Zap },
-  { title: "Sequences",  href: "/sequences",  icon: GitBranch,      requiredPlan: "pro" },
-  { title: "Activity",   href: "/activity",   icon: Activity },
-  { title: "Contacts",   href: "/contacts",   icon: Users },
-  { title: "Inbox",      href: "/inbox",      icon: MessageSquare },
-  { title: "Broadcasts", href: "/broadcasts", icon: Radio,          requiredPlan: "pro" },
-  { title: "Team",       href: "/team",       icon: Users2,         requiredPlan: "agency" },
-  { title: "Webhooks",   href: "/webhooks",   icon: Webhook,        requiredPlan: "pro" },
-  { title: "Accounts",   href: "/accounts",   icon: Instagram },
-  { title: "Billing",    href: "/billing",    icon: CreditCard },
-  { title: "Settings",   href: "/settings",   icon: Settings },
+  { title: "Dashboard",   href: "/dashboard",  icon: LayoutDashboard },
+  { title: "Automations", href: "/automation", icon: Zap },
+  { title: "Inbox",       href: "/inbox",      icon: MessageSquare },
+  { title: "Broadcasts",  href: "/broadcasts", icon: Radio,       requiredPlan: "pro" },
+  { title: "Contacts",    href: "/contacts",   icon: Users },
+  { title: "Analytics",   href: "/analytics",  icon: BarChart2,   dividerBefore: true },
+  { title: "Accounts",    href: "/accounts",   icon: Instagram },
+  { title: "Billing",     href: "/billing",    icon: CreditCard },
+  { title: "Settings",    href: "/settings",   icon: Settings },
 ];
 
 export function Sidebar() {
@@ -102,10 +95,30 @@ export function Sidebar() {
         </div>
 
         <div className="flex-1 flex flex-col justify-between p-4">
-          <nav className="space-y-2">
+          <nav className="space-y-1">
             {sidebarItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
               const locked = item.requiredPlan ? !canAccess(item.requiredPlan) : false;
+
+              if (item.dividerBefore) {
+                return (
+                  <div key={item.href}>
+                    <div className="my-2 border-t border-slate-800/60" />
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-indigo-600/10 text-indigo-400"
+                          : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+                      )}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.title}
+                    </Link>
+                  </div>
+                );
+              }
 
               if (locked) {
                 return (

@@ -36,7 +36,7 @@ export default function RegisterPage() {
         localStorage.setItem("refreshToken", response.data.data.tokens.refreshToken);
       }
       toast.success("Account created! Welcome to Loopin.");
-      window.location.href = "/dashboard";
+      window.location.href = "/onboarding";
     } catch (error: any) {
       toast.error("Registration failed", {
         description: error.response?.data?.error || "Please check your details",

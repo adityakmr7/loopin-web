@@ -7,12 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, Variable, ImageIcon, MessageCircle, Sparkles, PenLine, BookOpen } from "lucide-react";
+import { MessageSquare, AtSign, Zap, ChevronRight, Loader2, Plus, X, Variable, ImageIcon, MessageCircle, Sparkles, PenLine, BookOpen, UserCheck } from "lucide-react";
 import { PostFilterPicker } from "@/components/automation/PostFilterPicker";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AUTOMATION_TEMPLATES, type AutomationTemplate } from "@/data/automation-templates";
@@ -80,6 +80,7 @@ interface CreateRuleData {
   accountId: string;
   trigger: string;
   postFilter: string[];
+  requireFollow: boolean;
   conditions: {
     text_contains: string[];
   };
@@ -98,6 +99,7 @@ const DEFAULT_FORM: CreateRuleData = {
   accountId: "",
   trigger: "comment",
   postFilter: [],
+  requireFollow: false,
   conditions: { text_contains: [] },
   actions: { reply: "", like: true, hide: false, comment_to_dm: undefined },
 };
@@ -105,6 +107,15 @@ const DEFAULT_FORM: CreateRuleData = {
 export default function NewRulePage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
+
+  // Show success toast when redirected here after connecting Instagram
+  useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("connected") === "true") {
+      toast.success("Instagram connected!", {
+        description: "Now create your first automation to put it to work.",
+      });
+    }
+  }, []);
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState<CreateRuleData>(DEFAULT_FORM);
@@ -336,28 +347,28 @@ export default function NewRulePage() {
                    <div className="grid grid-cols-2 gap-3">
                       <div
                         className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", formData.trigger === "comment" ? "bg-indigo-900/20 border-indigo-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
-                        onClick={() => { setFormData({...formData, trigger: "comment", postFilter: []}); setDmEnabled(false); }}
+                        onClick={() => { setFormData({...formData, trigger: "comment", postFilter: [], requireFollow: false}); setDmEnabled(false); }}
                       >
                          <MessageSquare className={cn("h-5 w-5", formData.trigger === "comment" ? "text-indigo-400" : "text-slate-500")} />
                          <span className="font-medium text-sm">New Comment</span>
                       </div>
                       <div
                         className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", formData.trigger === "mention" ? "bg-purple-900/20 border-purple-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
-                        onClick={() => { setFormData({...formData, trigger: "mention", postFilter: []}); setDmEnabled(false); }}
+                        onClick={() => { setFormData({...formData, trigger: "mention", postFilter: [], requireFollow: false}); setDmEnabled(false); }}
                       >
                          <AtSign className={cn("h-5 w-5", formData.trigger === "mention" ? "text-purple-400" : "text-slate-500")} />
                          <span className="font-medium text-sm">Mentioned in Story</span>
                       </div>
                       <div
                         className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", formData.trigger === "message" ? "bg-emerald-900/20 border-emerald-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
-                        onClick={() => { setFormData({...formData, trigger: "message", postFilter: []}); setDmEnabled(true); }}
+                        onClick={() => { setFormData({...formData, trigger: "message", postFilter: [], requireFollow: false}); setDmEnabled(true); }}
                       >
                          <MessageCircle className={cn("h-5 w-5", formData.trigger === "message" ? "text-emerald-400" : "text-slate-500")} />
                          <span className="font-medium text-sm">DM Received</span>
                       </div>
                       <div
                         className={cn("cursor-pointer border rounded-lg p-4 flex flex-col gap-2 transition-all", formData.trigger === "story_reply" ? "bg-amber-900/20 border-amber-500/50" : "bg-slate-950 border-slate-800 hover:border-slate-700")}
-                        onClick={() => { setFormData({...formData, trigger: "story_reply", postFilter: []}); setDmEnabled(true); }}
+                        onClick={() => { setFormData({...formData, trigger: "story_reply", postFilter: [], requireFollow: false}); setDmEnabled(true); }}
                       >
                          <BookOpen className={cn("h-5 w-5", formData.trigger === "story_reply" ? "text-amber-400" : "text-slate-500")} />
                          <span className="font-medium text-sm">Story Reply</span>
@@ -535,6 +546,26 @@ export default function NewRulePage() {
                          </div>
                       )}
                    </div>
+
+                   {/* Require Follow toggle — only for comment trigger */}
+                   {formData.trigger === "comment" && (
+                     <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-4 py-3">
+                        <div className="flex items-start gap-3">
+                           <UserCheck className="h-4 w-4 text-indigo-400 mt-0.5 shrink-0" />
+                           <div>
+                              <Label className="text-sm font-medium">Require Follow First</Label>
+                              <p className="text-xs text-slate-500 mt-0.5">
+                                 On first comment, reply asking them to follow you. On their second comment, send the link.
+                              </p>
+                           </div>
+                        </div>
+                        <Switch
+                           checked={formData.requireFollow}
+                           onCheckedChange={(c) => setFormData({ ...formData, requireFollow: c })}
+                           className="data-[state=checked]:bg-indigo-600"
+                        />
+                     </div>
+                   )}
                   </div>
                 )}
              </div>
